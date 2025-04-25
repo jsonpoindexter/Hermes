@@ -5,13 +5,16 @@
  */
 
 /* Run parameters: */
-#define MAX_BRIGHTNESS 0.65 // Max LED brightness.
-#define MIN_BRIGHTNESS 0.3
+#define MAX_BRIGHTNESS 1 // Max LED brightness.
+#define MIN_BRIGHTNESS 1
 #define WAIT_FOR_KEYBOARD 0 // Use keyboard to pause/resume program.
 
 /* Neopixel parameters: */
-#define LED_COUNT 19
+#define LED_COUNT 44
 #define DATA_PIN 6
+
+// Reverse LED strip direction when true
+#define REVERSE_STRIP true
 
 /* Animation parameters: */
 // ~15 ms minimum crawl speed for normal mode,
@@ -24,9 +27,9 @@
 #define HERMES_SENSITIVITY 1600.0
 // Emulate two strips by starting the crawl in the
 // middle of the strip and crawling both ways.
-#define ENABLE_SPLIT_STRIP 1
+#define ENABLE_SPLIT_STRIP false
 // Center LED, aka LED #0.
-#define SPLIT_STRIP_CENTER 8
+#define SPLIT_STRIP_CENTER 0
 
 /* Sleeping parameters: */
 #define SLEEP_BRIGHTNESS 0.30
@@ -52,6 +55,11 @@
 
 // Our custom data type.
 #include "AccelReading.h"
+
+// Map logical LED index to physical LED index based on REVERSE_STRIP
+int mapIndex(int index) {
+  return REVERSE_STRIP ? (LED_COUNT - 1 - index) : index;
+}
 
 void setup() {
     Serial.begin(9600);
@@ -373,7 +381,7 @@ uint32_t lastColor;
 unsigned long lastCrawl;
 uint32_t lightArray[LED_COUNT];
 
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, DATA_PIN, NEO_RGB + NEO_KHZ800);
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, DATA_PIN, NEO_GRB + NEO_KHZ800);
 
 void colorSetup() {
   lastColor = 0;
@@ -445,13 +453,13 @@ void crawlColor(uint32_t color) {
     // Crawl 'low' side (center down)
     uint32_t *pixelColor = lightArray;
     for (int led = centerLED - 1; led >= centerLED - 1 - LEDsPerSide; led--) {
-      strip.setPixelColor(constrainBetween(led, 0, LED_COUNT - 1), *pixelColor++);
+      strip.setPixelColor(mapIndex(constrainBetween(led, 0, LED_COUNT - 1)), *pixelColor++);
     }
 
     // Crawl 'high' side (center up)
     pixelColor = lightArray;
     for (int led = centerLED; led < centerLED + LEDsPerSide; led++) {
-      strip.setPixelColor(constrainBetween(led, 0, LED_COUNT - 1), *pixelColor++);
+      strip.setPixelColor(mapIndex(constrainBetween(led, 0, LED_COUNT - 1)), *pixelColor++);
     }
 
     stripShow();
@@ -460,7 +468,7 @@ void crawlColor(uint32_t color) {
   }
 
   for (int i = 0; i < LED_COUNT; i++) {
-    strip.setPixelColor(i, lightArray[i]);
+    strip.setPixelColor(mapIndex(i), lightArray[i]);
   }
   stripShow();
 }
@@ -488,7 +496,7 @@ void showColor(float scale) {
 
   // Serial.print("Show "); Serial.print(scale); Serial.println(c);
   for (int i = 0; i < LED_COUNT; i++) {
-   strip.setPixelColor(i, pixelColor);
+    strip.setPixelColor(mapIndex(i), pixelColor);
   }
   stripShow();
 }
@@ -558,7 +566,7 @@ void showColorOff() {
 
 void colorOff() {
   for (int i = 0; i < strip.numPixels(); i++) {
-    strip.setPixelColor(i, 0);
+    strip.setPixelColor(mapIndex(i), 0);
   }
 }
 
@@ -570,12 +578,12 @@ void showCalibration() {
   float brightness = 0.3;
 
   // Red
-  strip.setPixelColor(mid - 1, strip.Color(127 * brightness, 0, 0));
+  strip.setPixelColor(mapIndex(mid - 1), strip.Color(127 * brightness, 0, 0));
   // Green
-  strip.setPixelColor(mid, strip.Color(0, 127 * brightness, 0));
+  strip.setPixelColor(mapIndex(mid), strip.Color(0, 127 * brightness, 0));
   // Blue
-  strip.setPixelColor(mid + 1, strip.Color(0, 0, 127 * brightness));
-  
+  strip.setPixelColor(mapIndex(mid + 1), strip.Color(0, 0, 127 * brightness));
+
   stripShow();
 }
 
@@ -665,8 +673,8 @@ void breathe() {
     lastBreath = now;
 
     for (int i = 0; i < strip.numPixels(); i++) {
-      uint8_t color = (SLEEP_BRIGHTNESS * 127 * KEYFRAMES[keyframePointer]) / 256;
-      strip.setPixelColor(i, color, 0, 0);
+      uint8_t colorVal = (SLEEP_BRIGHTNESS * 127 * KEYFRAMES[keyframePointer]) / 256;
+      strip.setPixelColor(mapIndex(i), colorVal, 0, 0);
     }
     strip.show();   
 
