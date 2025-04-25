@@ -67,11 +67,11 @@ void setup() {
   	// Clear the serial buffer.
     Serial.read();
   }
-  
+
   checkSuperfastHack();
-  
+
   colorSetup();
-  
+
   accelSetup();
 }
 
@@ -150,9 +150,9 @@ void accelSetup() {
   if (WAIT_FOR_KEYBOARD) {
     Serial.println("BEGIN");
   }
-  
+
   lsm.begin();
-  
+
   bufferPosition = 0;
 
   // Initialize the full buffer to zero.
@@ -161,7 +161,7 @@ void accelSetup() {
     accelBuffer[i].y = 0;
     accelBuffer[i].z = 0;
   }
-  
+
   calibrate();
 }
 
@@ -173,7 +173,7 @@ void calibrate() {
   calibration = 0;
   calibrationLEDTime = 0;
   calibrationLEDOn = false;
-  
+
   showCalibration();
 
   while (1) {
@@ -187,7 +187,7 @@ void calibrate() {
       calibrationLEDOn = !calibrationLEDOn;
       digitalWrite(ONBOARD_LED_PIN, calibrationLEDOn ? HIGH : LOW);
     }
-    
+
     // Fill the buffer.
     if(!fillBuffer()) {
       delay(10);
@@ -196,7 +196,7 @@ void calibrate() {
       }
       continue;
     }
-    
+
     // Check to see if we're done.
     bool pass = true;
     double avg = 0;
@@ -205,7 +205,7 @@ void calibrate() {
       pass = pass && (abs(m - calibration) < 10);
       avg += m;
     }
-    
+
     if (pass) {
       if (WAIT_FOR_KEYBOARD) {
         Serial.print("Calibration: ");
@@ -221,7 +221,7 @@ void calibrate() {
       }
     }
   }
-  
+
   // Turn the calibration light off.
   digitalWrite(ONBOARD_LED_PIN, LOW);
 }
@@ -233,7 +233,7 @@ void accelPoll() {
   if (!fillBuffer()) {
     return;
   }
-  
+
   /* PRINT DATA: */
   // printBuffer();
   // printDelta();
@@ -257,31 +257,31 @@ double getVector(AccelReading reading) {
 bool fillBuffer() {
   // Read from the hardware.
   lsm.read();
-  
+
   AccelReading newReading;
   newReading.x = lsm.accelData.x;
   newReading.y = lsm.accelData.y;
   newReading.z = lsm.accelData.z;
-  
+
   // The accelerometer hasn't processed a new reading since the last buffer.
   // Do nothing and return false.
   if (equalReadings(getCurrentReading(), newReading)) {
     return false;
   }
-  
+
   // The accelerometer has read new data.
-  
+
   // Advance the buffer.
   if (++bufferPosition >= bufferSize()) {
     bufferPosition = 0;
   }
 
   AccelReading *mutableCurrentReading = &accelBuffer[bufferPosition];
-  
+
   mutableCurrentReading->x = newReading.x;
   mutableCurrentReading->y = newReading.y;
   mutableCurrentReading->z = newReading.z;
-  
+
   return true;
 }
 
@@ -291,18 +291,18 @@ bool fillBuffer() {
 int getDelta() {
   AccelReading previousReading = getPreviousReading();
   AccelReading currentReading  = getCurrentReading();
-  
+
   int deltaX = abs(abs(currentReading.x) - abs(previousReading.x));
   int deltaY = abs(abs(currentReading.y) - abs(previousReading.y));
   int deltaZ = abs(abs(currentReading.z) - abs(previousReading.z));
-  
+
   return (deltaX + deltaY + deltaZ) / 3;
 }
 
 void printDelta() {
   AccelReading previousReading = getPreviousReading();
   AccelReading currentReading  = getCurrentReading();
-  
+
   int deltaX = abs(abs(currentReading.x) - abs(previousReading.x));
   int deltaY = abs(abs(currentReading.y) - abs(previousReading.y));
   int deltaZ = abs(abs(currentReading.z) - abs(previousReading.z));
@@ -378,11 +378,11 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, DATA_PIN, NEO_RGB + NEO_K
 void colorSetup() {
   lastColor = 0;
   lastCrawl = 0;
-  
+
   // Turn the strip on.
   strip.begin();
   stripShow();
-  
+
   // Initialize the LED buffer.
   for (int i = 0; i < LED_COUNT; i++) {
     lightArray[i] = 0;
@@ -396,12 +396,12 @@ void updateLED() {
   double upperBound = HERMES_SENSITIVITY;
   double normalizedVector = abs(calibration - getMagnitude(getCurrentReading()));
   double scale = normalizedVector / upperBound;
-  
+
   uint32_t pixelColor = pixelColorForScale(scale);
-  
+
   // Change LED strip color.
   //showColor(scale);
-  
+
   if (sleep()) {
     breathe();
   } else {
@@ -414,16 +414,16 @@ void updateLED() {
 // After CRAWL_SPEED_MS milliseconds,
 // we set LED[n + 1] = LED[n] for each LED.
 void crawlColor(uint32_t color) {
-  
+
   // Set the head pixel to the new color.
   uint32_t head = lightArray[0];
   lightArray[0] = color;
-  
+
   unsigned long now = millis();
-  
+
   // Shift the array if it's been long enough since last shifting,
   // or if a new color arrives.
-  bool shouldUpdate = 
+  bool shouldUpdate =
       (now - lastCrawl > CRAWL_SPEED_MS)
       || (color != head);
 
@@ -432,7 +432,7 @@ void crawlColor(uint32_t color) {
   }
 
   lastCrawl = now;
-  
+
   // Shift the array.
   for (int i = LED_COUNT - 1; i > 0; --i) {
     lightArray[i] = lightArray[i - 1];
@@ -441,24 +441,24 @@ void crawlColor(uint32_t color) {
   if (ENABLE_SPLIT_STRIP) {
     int centerLED = SPLIT_STRIP_CENTER;
     int LEDsPerSide = floor(LED_COUNT / 2);
-  
+
     // Crawl 'low' side (center down)
     uint32_t *pixelColor = lightArray;
     for (int led = centerLED - 1; led >= centerLED - 1 - LEDsPerSide; led--) {
       strip.setPixelColor(constrainBetween(led, 0, LED_COUNT - 1), *pixelColor++);
     }
-  
+
     // Crawl 'high' side (center up)
     pixelColor = lightArray;
     for (int led = centerLED; led < centerLED + LEDsPerSide; led++) {
       strip.setPixelColor(constrainBetween(led, 0, LED_COUNT - 1), *pixelColor++);
     }
-  
+
     stripShow();
-    
+
     return;
   }
-  
+
   for (int i = 0; i < LED_COUNT; i++) {
     strip.setPixelColor(i, lightArray[i]);
   }
@@ -513,7 +513,7 @@ void showColorProgression() {
     stripShow();
     delay(1);
   }
-  
+
   for (int i = 0; i < strip.numPixels(); i++) {
     strip.setPixelColor(i, 0);
   }
@@ -568,7 +568,7 @@ void showCalibration() {
 
   int mid = LED_COUNT / 2;
   float brightness = 0.3;
-  
+
   // Red
   strip.setPixelColor(mid - 1, strip.Color(127 * brightness, 0, 0));
   // Green
@@ -613,7 +613,7 @@ bool sleep() {
   if (abs(calibration - m) > SLEEP_SENSITIVITY) {
     lastSignificantMovementTime = now;
   }
-  
+
   // Last significant movement time needs to be longer than sleep wait time.
   if (now - lastSignificantMovementTime < SLEEP_WAIT_TIME_MS) {
     // Haven't waited long enough.
@@ -621,14 +621,14 @@ bool sleep() {
     sleeping = false;
     return false;
   }
-  
+
   // Only start sleeping on the sleep period.
   if (!sleeping && (now % SLEEP_CYCLE_MS != 0)) {
     resetBreathe();
     sleeping = false;
     return false;
   }
-  
+
   sleeping = true;
 
   return true;
@@ -646,7 +646,7 @@ const uint8_t KEYFRAMES[]  = {
   254, 251, 247, 242, 236, 228, 220, 211, 202, 192, 182, 172, 161, 151, 141,
   131, 121, 112, 103, 95, 87, 80, 73, 66, 60, 55, 50, 45, 41, 38, 34, 31, 28,
   26, 24, 22, 21, 20,
-  20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 
+  20, 20, 20, 20, 20, 20, 20, 20, 20, 20,
 };
 
 unsigned long lastBreath = 0.0;
@@ -660,7 +660,7 @@ void breathe() {
   int numKeyframes = sizeof(KEYFRAMES) - 1;
   float period = SLEEP_CYCLE_MS / numKeyframes;
   unsigned long now = millis();
-  
+
   if ((now - lastBreath) > period) {
     lastBreath = now;
 
