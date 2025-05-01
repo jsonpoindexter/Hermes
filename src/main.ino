@@ -5,45 +5,47 @@
  */
 
 /* Run parameters: */
-#define MAX_BRIGHTNESS 1 // Max LED brightness.
-#define MIN_BRIGHTNESS 1
-#define WAIT_FOR_KEYBOARD 0 // Use keyboard to pause/resume program.
-
-/* Neopixel parameters: */
-#define LED_COUNT 44
-#define DATA_PIN 6
-
-// Reverse LED strip direction when true
-#define REVERSE_STRIP true
-
-/* Animation parameters: */
-// ~15 ms minimum crawl speed for normal mode,
-// ~2 ms minimum for superfast hack mode.
-#define CRAWL_SPEED_MS 35
-// General sensitivity of the animation.
-// Raising this raises the vector magnitude needed to reach max (purple),
-// and thus lowers sensitivity.
-// Eg: 800 = more sensitive, 1600 = less sensitive
-#define HERMES_SENSITIVITY 1600.0
-// Emulate two strips by starting the crawl in the
-// middle of the strip and crawling both ways.
-#define ENABLE_SPLIT_STRIP false
-// Center LED, aka LED #0.
-#define SPLIT_STRIP_CENTER 0
-
-/* Sleeping parameters: */
-#define SLEEP_BRIGHTNESS 0.30
-#define SLEEP_CYCLE_MS 5000 // 5 second breathing cycle.
-#define SLEEP_WAIT_TIME_MS 5000 // No movement for 5 seconds triggers breathing.
-#define SLEEP_SENSITIVITY 25
-
-/* Debug parameters: */
-#define PRINT_LOOP_TIME 0
-
-/* Advanced: */
-#define ONBOARD_LED_PIN 7 // Pin D7 has an LED connected on FLORA.
+//#define MAX_BRIGHTNESS 1 // Max LED brightness.
+//#define MIN_BRIGHTNESS 1
+//#define WAIT_FOR_KEYBOARD 0 // Use keyboard to pause/resume program.
+//
+///* Neopixel parameters: */
+//#define LED_COUNT 44
+//#define DATA_PIN 6
+//
+//// Reverse LED strip direction when true
+//#define REVERSE_STRIP true
+//
+///* Animation parameters: */
+//// ~15 ms minimum crawl speed for normal mode,
+//// ~2 ms minimum for superfast hack mode.
+//#define CRAWL_SPEED_MS 35
+//// General sensitivity of the animation.
+//// Raising this raises the vector magnitude needed to reach max (purple),
+//// and thus lowers sensitivity.
+//// Eg: 800 = more sensitive, 1600 = less sensitive
+//#define HERMES_SENSITIVITY 1600.0
+//// Emulate two strips by starting the crawl in the
+//// middle of the strip and crawling both ways.
+//#define ENABLE_SPLIT_STRIP false
+//// Center LED, aka LED #0.
+//#define SPLIT_STRIP_CENTER 0
+//
+///* Sleeping parameters: */
+//#define SLEEP_BRIGHTNESS 0.30
+//#define SLEEP_CYCLE_MS 5000 // 5 second breathing cycle.
+//#define SLEEP_WAIT_TIME_MS 5000 // No movement for 5 seconds triggers breathing.
+//#define SLEEP_SENSITIVITY 25
+//
+///* Debug parameters: */
+//#define PRINT_LOOP_TIME 0
+//
+///* Advanced: */
+//#define ONBOARD_LED_PIN 7 // Pin D7 has an LED connected on FLORA.
 
 ///////////////////////////////////////////////////////////////////
+#include <Arduino.h>
+#include "Config.h"
 
 // LED imports.
 #include <Adafruit_NeoPixel.h>
@@ -58,12 +60,12 @@
 
 // Map logical LED index to physical LED index based on REVERSE_STRIP
 int mapIndex(int index) {
-    return REVERSE_STRIP ? (LED_COUNT - 1 - index) : index;
+    return cfg::REVERSE_STRIP ? (cfg::LED_COUNT - 1 - index) : index;
 }
 
 void setup() {
     Serial.begin(115200);
-    if (WAIT_FOR_KEYBOARD) {
+    if (cfg::WAIT_FOR_KEYBOARD) {
         // Wait for serial to initalize.
         while (!Serial) {}
 
@@ -94,10 +96,10 @@ void loop() {
 unsigned long before = 0;
 
 void loopDebug() {
-    if (WAIT_FOR_KEYBOARD) {
+    if (cfg::WAIT_FOR_KEYBOARD) {
         pauseOnKeystroke();
     }
-    if (PRINT_LOOP_TIME) {
+    if (cfg::PRINT_LOOP_TIME) {
         unsigned long now = millis();
         Serial.println(now - before);
         before = millis();
@@ -156,7 +158,7 @@ unsigned long lastSignificantMovementTime;
 
 // Initialization.
 void accelSetup() {
-    if (WAIT_FOR_KEYBOARD) {
+    if (cfg::WAIT_FOR_KEYBOARD) {
         Serial.println("BEGIN");
     }
 
@@ -175,7 +177,7 @@ void accelSetup() {
 }
 
 void calibrate() {
-    if (WAIT_FOR_KEYBOARD) {
+    if (cfg::WAIT_FOR_KEYBOARD) {
         Serial.println("Calibrating");
     }
 
@@ -186,7 +188,7 @@ void calibrate() {
     showCalibration();
 
     while (1) {
-        if (WAIT_FOR_KEYBOARD) {
+        if (cfg::WAIT_FOR_KEYBOARD) {
             Serial.print("...");
         }
         // Update onboard LED.
@@ -194,13 +196,13 @@ void calibrate() {
         if (now - calibrationLEDTime > 250) {
             calibrationLEDTime = now;
             calibrationLEDOn = !calibrationLEDOn;
-            digitalWrite(ONBOARD_LED_PIN, calibrationLEDOn ? HIGH : LOW);
+            digitalWrite(cfg::ONBOARD_LED_PIN, calibrationLEDOn ? HIGH : LOW);
         }
 
         // Fill the buffer.
         if (!fillBuffer()) {
             delay(10);
-            if (WAIT_FOR_KEYBOARD) {
+            if (cfg::WAIT_FOR_KEYBOARD) {
                 Serial.println("Waiting to fill buffer");
             }
             continue;
@@ -216,7 +218,7 @@ void calibrate() {
         }
 
         if (pass) {
-            if (WAIT_FOR_KEYBOARD) {
+            if (cfg::WAIT_FOR_KEYBOARD) {
                 Serial.print("Calibration: ");
                 Serial.println(calibration);
             }
@@ -224,7 +226,7 @@ void calibrate() {
         } else {
             avg /= bufferSize();
             calibration = avg;
-            if (WAIT_FOR_KEYBOARD) {
+            if (cfg::WAIT_FOR_KEYBOARD) {
                 Serial.print("Recalculating with average: ");
                 Serial.println(calibration);
             }
@@ -232,7 +234,7 @@ void calibrate() {
     }
 
     // Turn the calibration light off.
-    digitalWrite(ONBOARD_LED_PIN, LOW);
+    digitalWrite(cfg::ONBOARD_LED_PIN, LOW);
 }
 
 // Gathers data from accelerometer into the buffer. Only writes to the buffer
@@ -387,9 +389,9 @@ bool equalReadings(AccelReading a, AccelReading b) {
 int COLOR_RANGE = 384;
 uint32_t lastColor;
 unsigned long lastCrawl;
-uint32_t lightArray[LED_COUNT];
+uint32_t lightArray[cfg::LED_COUNT];
 
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, DATA_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(cfg::LED_COUNT, cfg::DATA_PIN, NEO_GRB + NEO_KHZ800);
 
 void colorSetup() {
     lastColor = 0;
@@ -400,7 +402,7 @@ void colorSetup() {
     stripShow();
 
     // Initialize the LED buffer.
-    for (int i = 0; i < LED_COUNT; i++) {
+    for (int i = 0; i < cfg::LED_COUNT; i++) {
         lightArray[i] = 0;
     }
 }
@@ -409,7 +411,7 @@ void updateLED() {
     // LED color takes a value from 0.0 to 1.0. Calculate scale from the current vector.
 
     // Largest vector needed to hit max color (1.0).
-    double upperBound = HERMES_SENSITIVITY;
+    double upperBound = cfg::HERMES_SENSITIVITY;
     double normalizedVector = abs(calibration - getMagnitude(getCurrentReading()));
     double scale = normalizedVector / upperBound;
 
@@ -440,7 +442,7 @@ void crawlColor(uint32_t color) {
     // Shift the array if it's been long enough since last shifting,
     // or if a new color arrives.
     bool shouldUpdate =
-            (now - lastCrawl > CRAWL_SPEED_MS)
+            (now - lastCrawl > cfg::CRAWL_SPEED_MS)
             || (color != head);
 
     if (!shouldUpdate) {
@@ -450,24 +452,24 @@ void crawlColor(uint32_t color) {
     lastCrawl = now;
 
     // Shift the array.
-    for (int i = LED_COUNT - 1; i > 0; --i) {
+    for (int i = cfg::LED_COUNT - 1; i > 0; --i) {
         lightArray[i] = lightArray[i - 1];
     }
 
-    if (ENABLE_SPLIT_STRIP) {
-        int centerLED = SPLIT_STRIP_CENTER;
-        int LEDsPerSide = floor(LED_COUNT / 2);
+    if (cfg::ENABLE_SPLIT_STRIP) {
+        int centerLED = cfg::SPLIT_STRIP_CENTER;
+        int LEDsPerSide = floor(cfg::LED_COUNT / 2);
 
         // Crawl 'low' side (center down)
         uint32_t *pixelColor = lightArray;
         for (int led = centerLED - 1; led >= centerLED - 1 - LEDsPerSide; led--) {
-            strip.setPixelColor(mapIndex(constrainBetween(led, 0, LED_COUNT - 1)), *pixelColor++);
+            strip.setPixelColor(mapIndex(constrainBetween(led, 0, cfg::LED_COUNT - 1)), *pixelColor++);
         }
 
         // Crawl 'high' side (center up)
         pixelColor = lightArray;
         for (int led = centerLED; led < centerLED + LEDsPerSide; led++) {
-            strip.setPixelColor(mapIndex(constrainBetween(led, 0, LED_COUNT - 1)), *pixelColor++);
+            strip.setPixelColor(mapIndex(constrainBetween(led, 0, cfg::LED_COUNT - 1)), *pixelColor++);
         }
 
         stripShow();
@@ -475,7 +477,7 @@ void crawlColor(uint32_t color) {
         return;
     }
 
-    for (int i = 0; i < LED_COUNT; i++) {
+    for (int i = 0; i < cfg::LED_COUNT; i++) {
         strip.setPixelColor(mapIndex(i), lightArray[i]);
     }
     stripShow();
@@ -503,7 +505,7 @@ void showColor(float scale) {
     lastColor = pixelColor;
 
     // Serial.print("Show "); Serial.print(scale); Serial.println(c);
-    for (int i = 0; i < LED_COUNT; i++) {
+    for (int i = 0; i < cfg::LED_COUNT; i++) {
         strip.setPixelColor(mapIndex(i), pixelColor);
     }
     stripShow();
@@ -514,7 +516,7 @@ void showColor(float scale) {
 // Takes a scale, from 0.0 to 1.0, indicating progression
 // through the color rainbow.
 uint32_t pixelColorForScale(double scale) {
-    float brightness = MAX_BRIGHTNESS * (scale + MIN_BRIGHTNESS);
+    float brightness = cfg::MAX_BRIGHTNESS * (scale + cfg::MIN_BRIGHTNESS);
     int c = COLOR_RANGE * scale; // Intentionally round to an int.
 
     return color(c, brightness);
@@ -582,7 +584,7 @@ void colorOff() {
 void showCalibration() {
     colorOff();
 
-    int mid = LED_COUNT / 2;
+    int mid = cfg::LED_COUNT / 2;
     float brightness = 0.3;
 
     // Red
@@ -626,12 +628,12 @@ bool sleep() {
 
     // See if this movement is significant, aka enough to wake us from sleep.
     double m = getMagnitude(getCurrentReading());
-    if (abs(calibration - m) > SLEEP_SENSITIVITY) {
+    if (abs(calibration - m) > cfg::SLEEP_SENSITIVITY) {
         lastSignificantMovementTime = now;
     }
 
     // Last significant movement time needs to be longer than sleep wait time.
-    if (now - lastSignificantMovementTime < SLEEP_WAIT_TIME_MS) {
+    if (now - lastSignificantMovementTime < cfg::SLEEP_WAIT_TIME_MS) {
         // Haven't waited long enough.
         resetBreathe();
         sleeping = false;
@@ -639,7 +641,7 @@ bool sleep() {
     }
 
     // Only start sleeping on the sleep period.
-    if (!sleeping && (now % SLEEP_CYCLE_MS != 0)) {
+    if (!sleeping && (now % cfg::SLEEP_CYCLE_MS != 0)) {
         resetBreathe();
         sleeping = false;
         return false;
@@ -674,14 +676,14 @@ void resetBreathe() {
 
 void breathe() {
     int numKeyframes = sizeof(KEYFRAMES) - 1;
-    float period = SLEEP_CYCLE_MS / numKeyframes;
+    float period = cfg::SLEEP_CYCLE_MS / numKeyframes;
     unsigned long now = millis();
 
     if ((now - lastBreath) > period) {
         lastBreath = now;
 
         for (int i = 0; i < strip.numPixels(); i++) {
-            uint8_t colorVal = (SLEEP_BRIGHTNESS * 127 * KEYFRAMES[keyframePointer]) / 256;
+            uint8_t colorVal = (cfg::SLEEP_BRIGHTNESS * 127 * KEYFRAMES[keyframePointer]) / 256;
             strip.setPixelColor(mapIndex(i), colorVal, 0, 0);
         }
         strip.show();
