@@ -2,16 +2,16 @@
 
 namespace cfg {
 // --------- Hardware pins ----------
-    constexpr uint8_t DATA_PIN         = 6;
-    constexpr uint8_t ONBOARD_LED_PIN  = 7;
+    constexpr uint8_t DATA_PIN         = 10;
+//    constexpr uint8_t ONBOARD_LED_PIN  = 7;
 
 // --------- LED strip --------------
     constexpr uint16_t LED_COUNT       = 44;
     constexpr bool     REVERSE_STRIP   = true;
 
 // --------- Animation --------------
-    constexpr uint16_t CRAWL_SPEED_MS  = 35;
-    constexpr float    HERMES_SENSITIVITY = 1600.0f;
+    constexpr uint16_t CRAWL_SPEED_MS  = 5;
+    constexpr float    HERMES_SENSITIVITY = 1600.0;
     constexpr bool     ENABLE_SPLIT_STRIP = false;
     constexpr uint16_t SPLIT_STRIP_CENTER = 0;
 
