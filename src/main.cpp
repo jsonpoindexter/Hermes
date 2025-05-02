@@ -7,17 +7,13 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include "Config.h"
+#include "debug.h"
 
 #include <LedStrip.h>
 static LedStrip leds;
 
 #include "AccelSensor.h"
 static AccelSensor accelSensor;
-
-// forward declarations
-void loopDebug();
-void checkSuperfastHack();
-void pauseOnKeystroke();
 
 void setup() {
     Serial.begin(9600);
@@ -55,36 +51,4 @@ void loop() {
 
     bool isSleeping = accelSensor.isSleeping();           // returns true/false, no LED work
     leds.update(scale, isSleeping);
-}
-
-// Debug functions controlled by run/debug parameters.
-unsigned long before = 0;
-
-void loopDebug() {
-    if (cfg::WAIT_FOR_KEYBOARD) {
-        pauseOnKeystroke();
-    }
-    if (cfg::PRINT_LOOP_TIME) {
-        unsigned long now = millis();
-        Serial.println(now - before);
-        before = millis();
-    }
-}
-
-void pauseOnKeystroke() {
-    if (Serial.available()) {
-        // Clear the serial buffer.
-        Serial.read();
-
-        Serial.println("Paused. Strike any key to resume...");
-
-        // Turn all LEDs off.
-        leds.colorOff();
-
-        // Wait for the next keystroke.
-        while (!Serial.available()) {}
-
-        // Clear the serial buffer.
-        Serial.read();
-    }
 }
