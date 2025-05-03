@@ -7,6 +7,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include "Config.h"
+#include "ConfigManager.h"
 #include "debug.h"
 #include "BLEConfigService.h"
 #include "AccelSensor.h"
@@ -46,12 +47,21 @@ void setup() {
 
     leds.begin();
 
-    // initialize crawl speed from persisted config
-    Serial.printf("setCrawlSpeed %d\n", cfg::getCrawlSpeedMs());
-    leds.setCrawlSpeed(cfg::getCrawlSpeedMs());
-    // initialize reverse strip from persisted config
-    Serial.printf("setReverseStrip %d\n", cfg::getReverseStrip());
-    leds.setReverseStrip(cfg::getReverseStrip());
+    // pull initial config through ConfigManager and subscribe for live updates
+    {
+        uint16_t initSpeed = ConfigManager::instance().getUint("crawlSpeedMs");
+        Serial.printf("initCrawlSpeed %u\n", initSpeed);
+        leds.setCrawlSpeed(initSpeed);
+
+        bool initReverse = ConfigManager::instance().getBool("reverseStrip");
+        Serial.printf("initReverseStrip %d\n", initReverse);
+        leds.setReverseStrip(initReverse);
+
+        ConfigManager::instance().onChangeUint("crawlSpeedMs",
+            [&](uint16_t ms){ leds.setCrawlSpeed(ms); });
+        ConfigManager::instance().onChangeBool("reverseStrip",
+            [&](bool rev){ leds.setReverseStrip(rev); });
+    }
 
     if (!accelSensor.begin()) {
         Serial.println("Accel init failed");
@@ -60,13 +70,6 @@ void setup() {
 
 void loop() {
     loopDebug();
-
-    // handle BLE callbacks
-    bleConfig.poll();
-    // update crawl speed in case it changed via BLE
-    leds.setCrawlSpeed(cfg::getCrawlSpeedMs());
-    // update reverse strip in case it changed via BLE
-    leds.setReverseStrip(cfg::getReverseStrip());
 
     accelSensor.poll();
     float scale = accelSensor.currentAccelScale();

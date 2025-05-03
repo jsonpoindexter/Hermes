@@ -1,7 +1,7 @@
 #pragma once
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
-#include <../../include/Config.h>
+#include <Config.h>
 
 class LedStrip {
 public:

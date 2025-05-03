@@ -1,5 +1,8 @@
 #include <cstdint>
 #pragma once
+#include <vector>
+#include <memory>
+#include "ConfigParameter.h"
 
 namespace cfg {
 // --------- Hardware pins ----------
@@ -30,20 +33,14 @@ namespace cfg {
     // your _default_ compile-time constant
     constexpr uint16_t DEFAULT_CRAWL_SPEED_MS = 2;
 
-    // the _runtime_ value (goes in RAM)
-    extern uint16_t crawlSpeedMs;
-
-    // reverse strip
-    extern bool reverseStrip;
-
     // call once in setup()
     void      begin();
 
-    // getters/setters
+    // runtime accessors (used by ConfigManager and others)
     uint16_t  getCrawlSpeedMs();
-    void      setCrawlSpeedMs(uint16_t ms);
     bool      getReverseStrip();
-    void      setReverseStrip(bool reverse);
+
+    // register config parameters
+    void registerParameters(std::vector<std::unique_ptr<IConfigParameter>>& list);
 
 } // namespace cfg
-
