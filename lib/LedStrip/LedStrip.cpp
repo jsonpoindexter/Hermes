@@ -1,4 +1,9 @@
+#include <../../include/Config.h> // ensure DEFAULT_CRAWL_SPEED_MS is available
 #include "LedStrip.h"
+
+void LedStrip::setCrawlSpeed(uint16_t ms) {
+    crawlSpeedMs = ms;
+}
 
 void LedStrip::begin() {
     strip.begin();
@@ -57,7 +62,7 @@ void LedStrip::crawl(uint32_t color)
     lightArray[0] = color;
 
     unsigned long now = millis();
-    bool needShift = (now - lastCrawl) > cfg::CRAWL_SPEED_MS || (color != head);
+    bool needShift = (now - lastCrawl) > crawlSpeedMs || (color != head);
     if (!needShift) return;
 
     lastCrawl = now;

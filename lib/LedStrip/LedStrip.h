@@ -8,6 +8,9 @@ public:
     void begin();
     void update(float accelScale, bool isSleeping);
 
+    // configure crawl speed at runtime
+    void setCrawlSpeed(uint16_t ms);
+
     void showCalibrationPattern();          // simple flash during accel calibration
 
     void colorOff();
@@ -34,5 +37,7 @@ private:
     unsigned long lastBreath = 0;
     int  keyframePtr = 0;
     bool sleeping    = false;
+    // runtime-controlled crawl speed
+    uint16_t crawlSpeedMs = cfg::DEFAULT_CRAWL_SPEED_MS;
 
 };

@@ -8,15 +8,24 @@
 #include <Wire.h>
 #include "Config.h"
 #include "debug.h"
+#include "BLEConfigService.h"
+#include "AccelSensor.h"
 
 #include <LedStrip.h>
-static LedStrip leds;
 
-#include "AccelSensor.h"
+static BLEConfigService bleConfig;
+static LedStrip leds;
 static AccelSensor accelSensor;
+
 
 void setup() {
     Serial.begin(9600);
+    delay(5000);
+
+    cfg::begin();
+
+    bleConfig.begin();
+    Serial.println("BLE Config ready");
 
     // Initialize I2C
     Wire.begin(8, 9);
@@ -38,6 +47,9 @@ void setup() {
 
     leds.begin();
 
+    // initialize crawl speed from persisted config
+    leds.setCrawlSpeed(cfg::getCrawlSpeedMs());
+
     if (!accelSensor.begin()) {
         Serial.println("Accel init failed");
     }
@@ -46,9 +58,14 @@ void setup() {
 void loop() {
     loopDebug();
 
+    // handle BLE callbacks
+    bleConfig.poll();
+    // update crawl speed in case it changed via BLE
+    leds.setCrawlSpeed(cfg::getCrawlSpeedMs());
+
     accelSensor.poll();
     float scale = accelSensor.currentAccelScale();
-
-    bool isSleeping = accelSensor.isSleeping();           // returns true/false, no LED work
+    bool isSleeping = accelSensor.isSleeping();
+    // returns true/false, no LED work
     leds.update(scale, isSleeping);
 }

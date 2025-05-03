@@ -1,3 +1,4 @@
+#include <cstdint>
 #pragma once
 
 namespace cfg {
@@ -10,7 +11,6 @@ namespace cfg {
     constexpr bool     REVERSE_STRIP   = true;
 
 // --------- Animation --------------
-    constexpr uint16_t CRAWL_SPEED_MS  = 5;
     constexpr float    HERMES_SENSITIVITY = 1600.0;
     constexpr bool     ENABLE_SPLIT_STRIP = false;
     constexpr uint16_t SPLIT_STRIP_CENTER = 0;
@@ -28,6 +28,24 @@ namespace cfg {
 // --------- Debug -----------------
     constexpr bool     WAIT_FOR_KEYBOARD   = false;
     constexpr bool     PRINT_LOOP_TIME     = false;
+    // your _default_ compile-time constant
+    constexpr uint16_t DEFAULT_CRAWL_SPEED_MS = 2;
 
+    // the _runtime_ value (goes in RAM)
+    extern uint16_t crawlSpeedMs;
+
+    // runtime storage for sleep cycle interval
+    extern uint32_t sleepCycleMs;
+
+    // call once in setup()
+    void      begin();
+
+    // getters/setters
+    uint16_t  getCrawlSpeedMs();
+    void      setCrawlSpeedMs(uint16_t ms);
+
+    // getters/setters for sleep cycle
+    uint32_t getSleepCycleMs();
+    void setSleepCycleMs(uint32_t ms);
 } // namespace cfg
 
