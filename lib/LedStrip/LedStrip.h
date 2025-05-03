@@ -10,6 +10,8 @@ public:
 
     // configure crawl speed at runtime
     void setCrawlSpeed(uint16_t ms);
+    // configure reverse strip at runtime
+    void setReverseStrip(bool reverse);
 
     void showCalibrationPattern();          // simple flash during accel calibration
 
@@ -39,5 +41,8 @@ private:
     bool sleeping    = false;
     // runtime-controlled crawl speed
     uint16_t crawlSpeedMs = cfg::DEFAULT_CRAWL_SPEED_MS;
+    // runtime-controlled reverse strip
+    bool reverseStrip = cfg::DEFAULT_REVERSE_STRIP;
+
 
 };

@@ -4,11 +4,10 @@
 namespace cfg {
 // --------- Hardware pins ----------
     constexpr uint8_t DATA_PIN         = 10;
-//    constexpr uint8_t ONBOARD_LED_PIN  = 7;
 
 // --------- LED strip --------------
     constexpr uint16_t LED_COUNT       = 44;
-    constexpr bool     REVERSE_STRIP   = true;
+    constexpr bool     DEFAULT_REVERSE_STRIP   = true;
 
 // --------- Animation --------------
     constexpr float    HERMES_SENSITIVITY = 1600.0;
@@ -34,8 +33,8 @@ namespace cfg {
     // the _runtime_ value (goes in RAM)
     extern uint16_t crawlSpeedMs;
 
-    // runtime storage for sleep cycle interval
-    extern uint32_t sleepCycleMs;
+    // reverse strip
+    extern bool reverseStrip;
 
     // call once in setup()
     void      begin();
@@ -43,9 +42,8 @@ namespace cfg {
     // getters/setters
     uint16_t  getCrawlSpeedMs();
     void      setCrawlSpeedMs(uint16_t ms);
+    bool      getReverseStrip();
+    void      setReverseStrip(bool reverse);
 
-    // getters/setters for sleep cycle
-    uint32_t getSleepCycleMs();
-    void setSleepCycleMs(uint32_t ms);
 } // namespace cfg
 

@@ -25,7 +25,6 @@ void setup() {
     cfg::begin();
 
     bleConfig.begin();
-    Serial.println("BLE Config ready");
 
     // Initialize I2C
     Wire.begin(8, 9);
@@ -48,7 +47,11 @@ void setup() {
     leds.begin();
 
     // initialize crawl speed from persisted config
+    Serial.printf("setCrawlSpeed %d\n", cfg::getCrawlSpeedMs());
     leds.setCrawlSpeed(cfg::getCrawlSpeedMs());
+    // initialize reverse strip from persisted config
+    Serial.printf("setReverseStrip %d\n", cfg::getReverseStrip());
+    leds.setReverseStrip(cfg::getReverseStrip());
 
     if (!accelSensor.begin()) {
         Serial.println("Accel init failed");
@@ -62,6 +65,8 @@ void loop() {
     bleConfig.poll();
     // update crawl speed in case it changed via BLE
     leds.setCrawlSpeed(cfg::getCrawlSpeedMs());
+    // update reverse strip in case it changed via BLE
+    leds.setReverseStrip(cfg::getReverseStrip());
 
     accelSensor.poll();
     float scale = accelSensor.currentAccelScale();

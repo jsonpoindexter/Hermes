@@ -3,11 +3,11 @@
 
 namespace cfg {
     uint16_t crawlSpeedMs = DEFAULT_CRAWL_SPEED_MS;
-    uint32_t sleepCycleMs = cfg::SLEEP_CYCLE_MS;
+    bool reverseStrip = DEFAULT_REVERSE_STRIP;
 
     void begin() {
         // reserve enough EEPROM for both crawlSpeedMs (2 bytes) and sleepCycleMs (4 bytes)
-        EEPROM.begin(sizeof(crawlSpeedMs) + sizeof(sleepCycleMs));
+        EEPROM.begin(sizeof(crawlSpeedMs) + sizeof(reverseStrip));
         // read back; if never written it will be 0xFFFF
         uint16_t stored;
         EEPROM.get(0, stored);
@@ -18,7 +18,7 @@ namespace cfg {
         uint32_t storedSleep;
         EEPROM.get(sizeof(crawlSpeedMs), storedSleep);
         if (storedSleep != 0xFFFFFFFF) {
-            sleepCycleMs = storedSleep;
+            reverseStrip = storedSleep;
         }
     }
 
@@ -27,18 +27,20 @@ namespace cfg {
     }
 
     void setCrawlSpeedMs(uint16_t ms) {
+        Serial.printf("setCrawlSpeedMs %d\n", ms);
         crawlSpeedMs = ms;
         EEPROM.put(0, crawlSpeedMs);
         EEPROM.commit();
     }
 
-    uint32_t getSleepCycleMs() {
-        return sleepCycleMs;
+    bool getReverseStrip() {
+        return reverseStrip;
     }
 
-    void setSleepCycleMs(uint32_t ms) {
-        sleepCycleMs = ms;
-        EEPROM.put(sizeof(crawlSpeedMs), sleepCycleMs);
+    void setReverseStrip(bool reverse) {
+        Serial.printf("setReverseStrip %d\n", reverse);
+        reverseStrip = reverse;
+        EEPROM.put(sizeof(crawlSpeedMs), reverseStrip);
         EEPROM.commit();
     }
 }

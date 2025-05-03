@@ -21,11 +21,12 @@ bool AccelSensor::begin() {
 }
 
 void AccelSensor::calibrate() {
-    Serial.println("Calibrating");
+    Serial.print("Calibrating");
     calibration = 0;
     calibrationLEDTime = 0;
     calibrationLEDOn = false;
     while (true) {
+        Serial.print("...");
         if (!fillBuffer()) {
             delay(10);
             continue;
@@ -40,6 +41,8 @@ void AccelSensor::calibrate() {
         if (pass) break;
         calibration = sum / bufferSize();
     }
+    Serial.print("Calibration complete: ");
+    Serial.println(calibration);
 }
 
 void AccelSensor::poll() {

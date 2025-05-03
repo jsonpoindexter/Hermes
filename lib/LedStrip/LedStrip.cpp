@@ -5,6 +5,10 @@ void LedStrip::setCrawlSpeed(uint16_t ms) {
     crawlSpeedMs = ms;
 }
 
+void LedStrip::setReverseStrip(bool reverse) {
+    reverseStrip = reverse;
+}
+
 void LedStrip::begin() {
     strip.begin();
     strip.show();                // clears strip
@@ -52,7 +56,7 @@ inline int LedStrip::constrainWrap(int v, int low, int high) const
 
 inline int LedStrip::mapIndex(int logical) const
 {
-    return cfg::REVERSE_STRIP ? (cfg::LED_COUNT - 1 - logical) : logical;
+    return reverseStrip ? (cfg::LED_COUNT - 1 - logical) : logical;
 }
 
 /* ------------ crawl animation ------------------ */
