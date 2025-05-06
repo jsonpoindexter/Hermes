@@ -65,6 +65,13 @@ void setup() {
 
     // Initialize I2C
     Wire.begin(8, 9);
+    // Configure accelerometer data rate to 50Hz (matches poll rate)
+    // LSM303_CTRL_REG1_A = 0x20, address = 0x19 (0x32>>1)
+    Wire.beginTransmission(0x19);
+    Wire.write(0x20);       // CTRL_REG1_A
+    Wire.write(0x57);       // 0b01010111: 50Hz ODR, normal mode, XYZ enabled
+    Wire.endTransmission();
+
     if (!accelSensor.begin()) {
         DEBUG_PRINTF("Accel init failed");
     }

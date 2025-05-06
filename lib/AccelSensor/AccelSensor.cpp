@@ -4,13 +4,12 @@
 #include "debug.h"
 
 AccelSensor::AccelSensor()
-  : lsm(), bufferPosition(0),
-    calibrationLEDTime(0), calibrationLEDOn(false),
-    lastSignificantMovementTime(0), calibration(0.0) {}
+        : lsm(), bufferPosition(0),
+          calibrationLEDTime(0), calibrationLEDOn(false),
+          lastSignificantMovementTime(0), calibration(0.0) {}
 
 bool AccelSensor::begin() {
     DEBUG_PRINTLN("BEGIN");
-    Wire.begin();
     if (!lsm.begin()) {
         return false;
     }
@@ -51,8 +50,19 @@ void AccelSensor::poll() {
 }
 
 bool AccelSensor::fillBuffer() {
-    lsm.read();
-    AccelReading newR{lsm.accelData.x, lsm.accelData.y, lsm.accelData.z};
+    // Burst read accelerometer: start at OUT_X_L_A (0x28) with auto-increment
+    Wire.beginTransmission(0x19);
+    Wire.write(0x28 | 0x80); // 0x80 for auto-increment
+    Wire.endTransmission(false);
+    if (Wire.requestFrom((uint8_t) 0x19, (uint8_t) 6) != 6) {
+        return false;
+    }
+    // Assemble 12-bit values (low byte first)
+    int16_t x = (Wire.read() | (Wire.read() << 8)) >> 4;
+    int16_t y = (Wire.read() | (Wire.read() << 8)) >> 4;
+    int16_t z = (Wire.read() | (Wire.read() << 8)) >> 4;
+    AccelReading newR{static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)};
+
     if (equalReadings(getCurrentReading(), newR)) {
         return false;
     }
@@ -64,11 +74,11 @@ bool AccelSensor::fillBuffer() {
     return true;
 }
 
-double AccelSensor::getMagnitude(const AccelReading& r) const {
+double AccelSensor::getMagnitude(const AccelReading &r) const {
     return sqrt(r.x * r.x + r.y * r.y + r.z * r.z);
 }
 
-bool AccelSensor::equalReadings(const AccelReading& a, const AccelReading& b) const {
+bool AccelSensor::equalReadings(const AccelReading &a, const AccelReading &b) const {
     return a.x == b.x && a.y == b.y && a.z == b.z;
 }
 
@@ -76,11 +86,11 @@ int AccelSensor::bufferSize() const {
     return sizeof(accelBuffer) / sizeof(accelBuffer[0]);
 }
 
-const AccelReading& AccelSensor::getCurrentReading() const {
+const AccelReading &AccelSensor::getCurrentReading() const {
     return accelBuffer[bufferPosition];
 }
 
-const AccelReading& AccelSensor::getPreviousReading() const {
+const AccelReading &AccelSensor::getPreviousReading() const {
     int prev = bufferPosition ? bufferPosition - 1 : bufferSize() - 1;
     return accelBuffer[prev];
 }
