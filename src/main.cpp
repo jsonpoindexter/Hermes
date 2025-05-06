@@ -77,12 +77,21 @@ void setup() {
     }
 }
 
+// Throttle accelerometer polling to 50 Hz
+static uint32_t lastPollTime = 0;
+static float lastScale = 0.0f;
+static bool lastSleeping = false;
+
 void loop() {
     loopDebug();
 
-    accelSensor.poll();
-    float scale = accelSensor.currentAccelScale();
-    bool isSleeping = accelSensor.isSleeping();
-    // returns true/false, no LED work
-    leds.update(scale, isSleeping);
+    uint32_t now = millis();
+    if (now - lastPollTime >= 20) {           // 20 ms => 50 Hz poll rate
+        accelSensor.poll();
+        lastScale = accelSensor.currentAccelScale();
+        lastSleeping = accelSensor.isSleeping();
+        lastPollTime = now;
+    }
+
+    leds.update(lastScale, lastSleeping);
 }

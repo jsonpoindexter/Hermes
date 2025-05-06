@@ -54,23 +54,32 @@ bool AccelSensor::fillBuffer() {
     Wire.beginTransmission(0x19);
     Wire.write(0x28 | 0x80); // 0x80 for auto-increment
     Wire.endTransmission(false);
+
+    // Request 6 bytes (X, Y, Z)
     if (Wire.requestFrom((uint8_t) 0x19, (uint8_t) 6) != 6) {
         return false;
     }
-    // Assemble 12-bit values (low byte first)
+
+    // Assemble 12-bit signed values (low byte first)
     int16_t x = (Wire.read() | (Wire.read() << 8)) >> 4;
     int16_t y = (Wire.read() | (Wire.read() << 8)) >> 4;
     int16_t z = (Wire.read() | (Wire.read() << 8)) >> 4;
     AccelReading newR{static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)};
 
+    // Skip if unchanged
     if (equalReadings(getCurrentReading(), newR)) {
         return false;
     }
+
+    // Store in circular buffer
     bufferPosition = (bufferPosition + 1) % bufferSize();
     accelBuffer[bufferPosition] = newR;
+
+    // Update last movement timestamp if above sleep threshold
     if (abs(getMagnitude(newR) - calibration) > cfg::SLEEP_SENSITIVITY) {
         lastSignificantMovementTime = millis();
     }
+
     return true;
 }
 
