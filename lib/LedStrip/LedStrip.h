@@ -55,4 +55,5 @@ private:
 
 
     static CRGB wheel[384];
+    static int physicalIndex[cfg::LED_COUNT];
 };

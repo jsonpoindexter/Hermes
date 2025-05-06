@@ -6,6 +6,9 @@
 // Definition of static wheel array
 CRGB LedStrip::wheel[LedStrip::COLOR_RANGE];
 
+// Definition of static physical index array
+int LedStrip::physicalIndex[cfg::LED_COUNT];
+
 // Circular buffer head index for crawl animation
 
 void LedStrip::setCrawlSpeed(uint16_t ms) {
@@ -28,6 +31,11 @@ void LedStrip::begin() {
         uint8_t g = (c >> 8) & 0xFF;
         uint8_t b = c & 0xFF;
         wheel[i] = CRGB(r, g, b);
+    }
+
+    // Build physical index map
+    for (uint16_t i = 0; i < cfg::LED_COUNT; ++i) {
+        physicalIndex[i] = reverseStrip ? (cfg::LED_COUNT - 1 - i) : i;
     }
 }
 
@@ -118,14 +126,14 @@ void LedStrip::crawl(uint32_t color) {
             uint8_t r = (c >> 16) & 0xFF;
             uint8_t g = (c >> 8) & 0xFF;
             uint8_t b = c & 0xFF;
-            ledsArr[mapIndex(center - 1 - i)] = CRGB(r, g, b);
+            ledsArr[physicalIndex[center - 1 - i]] = CRGB(r, g, b);
         }
         for (int i = 0; i < perSide; ++i) {
             uint32_t c = lightArray[(head + perSide + i) % cfg::LED_COUNT];
             uint8_t r = (c >> 16) & 0xFF;
             uint8_t g = (c >> 8) & 0xFF;
             uint8_t b = c & 0xFF;
-            ledsArr[mapIndex(center + i)] = CRGB(r, g, b);
+            ledsArr[physicalIndex[center + i]] = CRGB(r, g, b);
         }
     } else {
         for (int i = 0; i < cfg::LED_COUNT; ++i) {
@@ -133,7 +141,7 @@ void LedStrip::crawl(uint32_t color) {
             uint8_t r = (c >> 16) & 0xFF;
             uint8_t g = (c >> 8) & 0xFF;
             uint8_t b = c & 0xFF;
-            ledsArr[mapIndex(i)] = CRGB(r, g, b);
+            ledsArr[physicalIndex[i]] = CRGB(r, g, b);
         }
     }
     FastLED.show();
@@ -161,7 +169,7 @@ void LedStrip::breathe() {
     uint8_t key = KEYFRAMES[keyframePtr];
     for (int i = 0; i < cfg::LED_COUNT; ++i) {
         uint8_t v = (cfg::SLEEP_BRIGHTNESS * 127 * key) / 256;
-        ledsArr[mapIndex(i)] = CRGB(v, 0, 0);
+        ledsArr[physicalIndex[i]] = CRGB(v, 0, 0);
     }
     FastLED.show();
 
@@ -178,7 +186,7 @@ void LedStrip::showSolid(float scale) {
         uint8_t r = (c >> 16) & 0xFF;
         uint8_t g = (c >> 8) & 0xFF;
         uint8_t b = c & 0xFF;
-        ledsArr[mapIndex(i)] = CRGB(r, g, b);
+        ledsArr[physicalIndex[i]] = CRGB(r, g, b);
     }
 
     FastLED.show();
@@ -199,11 +207,11 @@ void LedStrip::showCalibrationPattern() {
     float brightness = 0.3;
 
     // Red
-    ledsArr[mapIndex(mid - 1)] = CRGB(static_cast<uint8_t>(127 * brightness), 0, 0);
+    ledsArr[physicalIndex[mid - 1]] = CRGB(static_cast<uint8_t>(127 * brightness), 0, 0);
     // Green
-    ledsArr[mapIndex(mid)] = CRGB(0, static_cast<uint8_t>(127 * brightness), 0);
+    ledsArr[physicalIndex[mid]] = CRGB(0, static_cast<uint8_t>(127 * brightness), 0);
     // Blue
-    ledsArr[mapIndex(mid + 1)] = CRGB(0, 0, static_cast<uint8_t>(127 * brightness));
+    ledsArr[physicalIndex[mid + 1]] = CRGB(0, 0, static_cast<uint8_t>(127 * brightness));
 
     FastLED.show();
 }
