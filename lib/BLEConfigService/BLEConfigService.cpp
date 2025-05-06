@@ -1,6 +1,7 @@
 #include <NimBLEDevice.h>
 #include "BLEConfigService.h"
 #include "Config.h"
+#include <Arduino.h>
 #include <cstring>
 #include <memory>
 #include <vector>
@@ -41,14 +42,21 @@ public:
         auto raw = pCharacteristic->getValue();
         entry->write(raw.data(), raw.size());
         DEBUG_PRINTF("%s onWrite\n", entry->name());
-        // echo back the new value
-        uint8_t buf[8] = {0};
-        entry->read(buf);
-        pCharacteristic->setValue(buf, entry->size());
+        // echo back the new value with debounced notification
+        uint32_t now = millis();
+        if (now - lastNotifyTime >= kNotifyDebounceMs) {
+            uint8_t buf[8] = {0};
+            entry->read(buf);
+            pCharacteristic->setValue(buf, entry->size());
+            pCharacteristic->notify(false);
+            lastNotifyTime = now;
+        }
     }
 
 private:
     IConfigParameter *entry;
+    uint32_t lastNotifyTime = 0;
+    static constexpr uint32_t kNotifyDebounceMs = 50;
 };
 
 void BLEConfigService::begin() {
@@ -67,7 +75,8 @@ void BLEConfigService::begin() {
                 e->uuid(),
                 NIMBLE_PROPERTY::READ |
                 NIMBLE_PROPERTY::WRITE |
-                NIMBLE_PROPERTY::WRITE_NR
+                NIMBLE_PROPERTY::WRITE_NR |
+                NIMBLE_PROPERTY::NOTIFY
         );
         uint8_t buf[8] = {0}; // enough size for all parameters
         e->read(buf);
