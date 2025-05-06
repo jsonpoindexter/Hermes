@@ -45,7 +45,7 @@ void LedStrip::update(float accelScale, bool isSleeping) {
         breathe();
         return;
     }
-    uint32_t c = colorForScale(accelScale);
+    CRGB c = colorForScale(accelScale);
     crawl(c);
 }
 
@@ -74,20 +74,14 @@ uint32_t LedStrip::colorWheel(uint16_t color, float brightness) {
     return (r << 16) | (g << 8) | b;
 }
 
-uint32_t LedStrip::colorForScale(float scale) {
+CRGB LedStrip::colorForScale(float scale) const {
     scale = constrain(scale, 0.0f, 1.0f);
-    // Map scale to 0-383 index
     uint16_t idx = static_cast<uint16_t>(scale * (COLOR_RANGE - 1));
-    // Determine brightness factor between MIN_BRIGHTNESS and MAX_BRIGHTNESS
     float bf = cfg::MIN_BRIGHTNESS + scale * (cfg::MAX_BRIGHTNESS - cfg::MIN_BRIGHTNESS);
     bf = constrain(bf, 0.0f, 1.0f);
     CRGB c = wheel[idx];
-    // Apply brightness via 8-bit scale
-    c.nscale8(static_cast<uint8_t>(bf * 255.0f));
-    // Pack back to 32-bit
-    return (static_cast<uint32_t>(c.r) << 16) |
-           (static_cast<uint32_t>(c.g) << 8) |
-           static_cast<uint32_t>(c.b);
+    c.nscale8(static_cast<uint8_t>(bf * 255));
+    return c;
 }
 
 inline int LedStrip::constrainWrap(int v, int low, int high) {
@@ -102,10 +96,10 @@ inline int LedStrip::mapIndex(int logical) const {
 
 /* ------------ crawl animation ------------------ */
 int head = 0; // Circular buffer head index
-void LedStrip::crawl(uint32_t color) {
+void LedStrip::crawl(const CRGB &color) {
     // Determine previous head color
     int prevHeadIdx = head;
-    uint32_t prevHeadColor = lightArray[prevHeadIdx];
+    CRGB prevHeadColor = lightArray[prevHeadIdx];
 
     unsigned long now = millis();
     bool needShift = (now - lastCrawl) > crawlSpeedMs || (color != prevHeadColor);
@@ -122,26 +116,14 @@ void LedStrip::crawl(uint32_t color) {
         int perSide = cfg::LED_COUNT / 2;
 
         for (int i = 0; i < perSide; ++i) {
-            uint32_t c = lightArray[(head + i) % cfg::LED_COUNT];
-            uint8_t r = (c >> 16) & 0xFF;
-            uint8_t g = (c >> 8) & 0xFF;
-            uint8_t b = c & 0xFF;
-            ledsArr[physicalIndex[center - 1 - i]] = CRGB(r, g, b);
+            ledsArr[physicalIndex[center - 1 - i]] = lightArray[(head + i) % cfg::LED_COUNT];
         }
         for (int i = 0; i < perSide; ++i) {
-            uint32_t c = lightArray[(head + perSide + i) % cfg::LED_COUNT];
-            uint8_t r = (c >> 16) & 0xFF;
-            uint8_t g = (c >> 8) & 0xFF;
-            uint8_t b = c & 0xFF;
-            ledsArr[physicalIndex[center + i]] = CRGB(r, g, b);
+            ledsArr[physicalIndex[center + i]] = lightArray[(head + perSide + i) % cfg::LED_COUNT];
         }
     } else {
         for (int i = 0; i < cfg::LED_COUNT; ++i) {
-            uint32_t c = lightArray[(head + i) % cfg::LED_COUNT];
-            uint8_t r = (c >> 16) & 0xFF;
-            uint8_t g = (c >> 8) & 0xFF;
-            uint8_t b = c & 0xFF;
-            ledsArr[physicalIndex[i]] = CRGB(r, g, b);
+            ledsArr[physicalIndex[i]] = lightArray[(head + i) % cfg::LED_COUNT];
         }
     }
     FastLED.show();
@@ -178,15 +160,12 @@ void LedStrip::breathe() {
 
 /* ------------ misc ----------------------------- */
 void LedStrip::showSolid(float scale) {
-    uint32_t c = colorForScale(scale);
+    CRGB c = colorForScale(scale);
     if (c == lastColor) return;
     lastColor = c;
 
     for (int i = 0; i < cfg::LED_COUNT; ++i) {
-        uint8_t r = (c >> 16) & 0xFF;
-        uint8_t g = (c >> 8) & 0xFF;
-        uint8_t b = c & 0xFF;
-        ledsArr[physicalIndex[i]] = CRGB(r, g, b);
+        ledsArr[physicalIndex[i]] = c;
     }
 
     FastLED.show();

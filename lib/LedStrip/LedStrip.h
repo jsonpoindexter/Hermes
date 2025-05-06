@@ -22,13 +22,13 @@ public:
 
 private:
     /* ---------- helpers ---------- */
-    void crawl(uint32_t color);
+    void crawl(const CRGB &color);
 
     void breathe();
 
     void showSolid(float scale);
 
-    static uint32_t colorForScale(float scale);
+    CRGB colorForScale(float scale) const;
 
     static uint32_t colorWheel(uint16_t colorIdx, float brightness);
 
@@ -42,8 +42,8 @@ private:
     static constexpr uint16_t COLOR_RANGE = 384;
 
     CRGB ledsArr[cfg::LED_COUNT];
-    uint32_t lightArray[cfg::LED_COUNT]{};
-    uint32_t lastColor = 0;
+    CRGB lightArray[cfg::LED_COUNT]{};
+    CRGB lastColor = 0;
     unsigned long lastCrawl = 0;
     unsigned long lastBreath = 0;
     int keyframePtr = 0;
