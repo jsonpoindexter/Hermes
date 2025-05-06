@@ -3,6 +3,9 @@
 #include "LedStrip.h"
 #include <FastLED.h>
 
+// Definition of static wheel array
+CRGB LedStrip::wheel[LedStrip::COLOR_RANGE];
+
 // Circular buffer head index for crawl animation
 
 void LedStrip::setCrawlSpeed(uint16_t ms) {
@@ -14,9 +17,18 @@ void LedStrip::setReverseStrip(bool reverse) {
 }
 
 void LedStrip::begin() {
-    FastLED.addLeds<NEOPIXEL, cfg::DATA_PIN>(ledsArr, cfg::LED_COUNT);
+    CFastLED::addLeds<NEOPIXEL, cfg::DATA_PIN>(ledsArr, cfg::LED_COUNT);
     FastLED.clear();
     FastLED.show();
+
+    // Build 384-step color wheel cache
+    for (int i = 0; i < COLOR_RANGE; ++i) {
+        uint32_t c = colorWheel(i, 1.0f);
+        uint8_t r = (c >> 16) & 0xFF;
+        uint8_t g = (c >> 8) & 0xFF;
+        uint8_t b = c & 0xFF;
+        wheel[i] = CRGB(r, g, b);
+    }
 }
 
 void LedStrip::update(float accelScale, bool isSleeping) {
@@ -30,7 +42,7 @@ void LedStrip::update(float accelScale, bool isSleeping) {
 }
 
 /* -------------------------------------------------- */
-uint32_t LedStrip::colorWheel(uint16_t color, float brightness) const {
+uint32_t LedStrip::colorWheel(uint16_t color, float brightness) {
     color = constrain(color, 0, COLOR_RANGE - 1);     // 0-383
     uint8_t r = 0, g = 0, b = 0;
 
@@ -54,14 +66,23 @@ uint32_t LedStrip::colorWheel(uint16_t color, float brightness) const {
     return (r << 16) | (g << 8) | b;
 }
 
-uint32_t LedStrip::colorForScale(float scale) const {
+uint32_t LedStrip::colorForScale(float scale) {
     scale = constrain(scale, 0.0f, 1.0f);
-    float brightness = cfg::MAX_BRIGHTNESS * (scale + cfg::MIN_BRIGHTNESS);
-    uint16_t idx = static_cast<uint16_t>(COLOR_RANGE * scale);
-    return colorWheel(idx, brightness);
+    // Map scale to 0-383 index
+    uint16_t idx = static_cast<uint16_t>(scale * (COLOR_RANGE - 1));
+    // Determine brightness factor between MIN_BRIGHTNESS and MAX_BRIGHTNESS
+    float bf = cfg::MIN_BRIGHTNESS + scale * (cfg::MAX_BRIGHTNESS - cfg::MIN_BRIGHTNESS);
+    bf = constrain(bf, 0.0f, 1.0f);
+    CRGB c = wheel[idx];
+    // Apply brightness via 8-bit scale
+    c.nscale8(static_cast<uint8_t>(bf * 255.0f));
+    // Pack back to 32-bit
+    return (static_cast<uint32_t>(c.r) << 16) |
+           (static_cast<uint32_t>(c.g) << 8) |
+           static_cast<uint32_t>(c.b);
 }
 
-inline int LedStrip::constrainWrap(int v, int low, int high) const {
+inline int LedStrip::constrainWrap(int v, int low, int high) {
     if (v < low) return high - (low - v) + 1;
     if (v > high) return low + (v - high) - 1;
     return v;

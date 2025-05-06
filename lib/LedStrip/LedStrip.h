@@ -18,7 +18,7 @@ public:
 
     void showCalibrationPattern();          // simple flash during accel calibration
 
-    void colorOff();
+    static void colorOff();
 
 private:
     /* ---------- helpers ---------- */
@@ -28,13 +28,13 @@ private:
 
     void showSolid(float scale);
 
-    uint32_t colorForScale(float scale) const;
+    static uint32_t colorForScale(float scale);
 
-    uint32_t colorWheel(uint16_t colorIdx, float brightness) const;
+    static uint32_t colorWheel(uint16_t colorIdx, float brightness);
 
     inline int mapIndex(int logical) const;
 
-    inline int constrainWrap(int v, int low, int high) const;
+    static inline int constrainWrap(int v, int low, int high);
 
     void stripShow();
 
@@ -54,4 +54,5 @@ private:
     bool reverseStrip = cfg::DEFAULT_REVERSE_STRIP;
 
 
+    static CRGB wheel[384];
 };
