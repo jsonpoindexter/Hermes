@@ -27,7 +27,7 @@ namespace cfg {
 
     void registerParameters(std::vector<std::unique_ptr<IConfigParameter>>& list) {
         list.push_back(std::unique_ptr<IConfigParameter>(new ConfigParameter<uint16_t>(
-            "6E400001-B5A3-F393-E0A9-E50E24DCCA9E",
+            "00400001-B5A3-F393-E0A9-E50E24DCCA9E",
             "crawlSpeedMs",
             []() { return crawlSpeedMs; },
             [](uint16_t v) {
@@ -39,7 +39,7 @@ namespace cfg {
             }
         )));
         list.push_back(std::unique_ptr<IConfigParameter>(new ConfigParameter<bool>(
-            "6E400002-B5A3-F393-E0A9-E50E24DCCA9E",
+            "01400002-B5A3-F393-E0A9-E50E24DCCA9E",
             "reverseStrip",
             []() { return reverseStrip; },
             [](bool v) {
