@@ -149,10 +149,8 @@ void LedStrip::breathe() {
     lastBreath = now;
 
     uint8_t key = KEYFRAMES[keyframePtr];
-    for (int i = 0; i < cfg::LED_COUNT; ++i) {
-        uint8_t v = (cfg::SLEEP_BRIGHTNESS * 127 * key) / 256;
-        ledsArr[physicalIndex[i]] = CRGB(v, 0, 0);
-    }
+    uint8_t v = (cfg::SLEEP_BRIGHTNESS * 127 * key) / 256;
+    fill_solid(ledsArr, cfg::LED_COUNT, CRGB(v, 0, 0));
     FastLED.show();
 
     if (++keyframePtr >= frames) keyframePtr = 0;
@@ -164,10 +162,7 @@ void LedStrip::showSolid(float scale) {
     if (c == lastColor) return;
     lastColor = c;
 
-    for (int i = 0; i < cfg::LED_COUNT; ++i) {
-        ledsArr[physicalIndex[i]] = c;
-    }
-
+    fill_solid(ledsArr, cfg::LED_COUNT, c);
     FastLED.show();
 }
 
