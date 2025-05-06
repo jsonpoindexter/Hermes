@@ -10,7 +10,7 @@ void loopDebug() {
     }
     if (cfg::PRINT_LOOP_TIME) {
         unsigned long now = millis();
-        Serial.println(now - before);
+        DEBUG_PRINTLN(now - before);
         before = millis();
     }
 }
@@ -20,7 +20,7 @@ void pauseOnKeystroke() {
         // Clear the serial buffer.
         Serial.read();
 
-        Serial.println("Paused. Strike any key to resume...");
+        DEBUG_PRINTLN("Paused. Strike any key to resume...");
 
         // Turn all LEDs off.
         // leds.colorOff();  // You'll need to handle access to leds

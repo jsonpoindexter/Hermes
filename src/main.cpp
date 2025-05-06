@@ -20,23 +20,22 @@ static AccelSensor accelSensor;
 
 
 void setup() {
+#ifdef DEBUG
     Serial.begin(9600);
     delay(5000);
+#endif
 
     cfg::begin();
 
     bleConfig.begin();
 
-    // Initialize I2C
-    Wire.begin(8, 9);
-
-    Serial.println("Starting Hermes LED shoes...");
+    DEBUG_PRINTLN("Starting Hermes LED shoes...");
 
     if (cfg::WAIT_FOR_KEYBOARD) {
         // Wait for serial to initalize.
         while (!Serial) {}
 
-        Serial.println("Strike any key to start...");
+        DEBUG_PRINTLN("Strike any key to start...");
 
         // Wait for the next keystroke.
         while (!Serial.available()) {}
@@ -46,25 +45,28 @@ void setup() {
     }
 
     leds.begin();
+    leds.showCalibrationPattern();
 
     // pull initial config through ConfigManager and subscribe for live updates
     {
         uint16_t initSpeed = ConfigManager::instance().getUint("crawlSpeedMs");
-        Serial.printf("initCrawlSpeed %u\n", initSpeed);
+        DEBUG_PRINTF("initCrawlSpeed %u\n", initSpeed);
         leds.setCrawlSpeed(initSpeed);
 
         bool initReverse = ConfigManager::instance().getBool("reverseStrip");
-        Serial.printf("initReverseStrip %d\n", initReverse);
+        DEBUG_PRINTF("initReverseStrip %d\n", initReverse);
         leds.setReverseStrip(initReverse);
 
         ConfigManager::instance().onChangeUint("crawlSpeedMs",
-            [&](uint16_t ms){ leds.setCrawlSpeed(ms); });
+                                               [&](uint16_t ms) { leds.setCrawlSpeed(ms); });
         ConfigManager::instance().onChangeBool("reverseStrip",
-            [&](bool rev){ leds.setReverseStrip(rev); });
+                                               [&](bool rev) { leds.setReverseStrip(rev); });
     }
 
+    // Initialize I2C
+    Wire.begin(8, 9);
     if (!accelSensor.begin()) {
-        Serial.println("Accel init failed");
+        DEBUG_PRINTF("Accel init failed");
     }
 }
 

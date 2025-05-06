@@ -1,6 +1,7 @@
 #include "AccelSensor.h"
 #include <Wire.h>
 #include <math.h>
+#include "debug.h"
 
 AccelSensor::AccelSensor()
   : lsm(), bufferPosition(0),
@@ -8,7 +9,7 @@ AccelSensor::AccelSensor()
     lastSignificantMovementTime(0), calibration(0.0) {}
 
 bool AccelSensor::begin() {
-    Serial.println("BEGIN");
+    DEBUG_PRINTLN("BEGIN");
     Wire.begin();
     if (!lsm.begin()) {
         return false;
@@ -21,12 +22,12 @@ bool AccelSensor::begin() {
 }
 
 void AccelSensor::calibrate() {
-    Serial.print("Calibrating");
+    DEBUG_PRINT("Calibrating");
     calibration = 0;
     calibrationLEDTime = 0;
     calibrationLEDOn = false;
     while (true) {
-        Serial.print("...");
+        DEBUG_PRINT("...");
         if (!fillBuffer()) {
             delay(10);
             continue;
@@ -41,8 +42,8 @@ void AccelSensor::calibrate() {
         if (pass) break;
         calibration = sum / bufferSize();
     }
-    Serial.print("Calibration complete: ");
-    Serial.println(calibration);
+    DEBUG_PRINT("Calibration complete: ");
+    DEBUG_PRINTLN(calibration);
 }
 
 void AccelSensor::poll() {

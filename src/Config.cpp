@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <memory>
 #include <ConfigManager.h>
+#include <debug.h>
 
 namespace cfg {
     uint16_t crawlSpeedMs = DEFAULT_CRAWL_SPEED_MS;
@@ -25,35 +26,36 @@ namespace cfg {
         }
     }
 
-    void registerParameters(std::vector<std::unique_ptr<IConfigParameter>>& list) {
+    void registerParameters(std::vector<std::unique_ptr<IConfigParameter>> &list) {
         list.push_back(std::unique_ptr<IConfigParameter>(new ConfigParameter<uint16_t>(
-            "00400001-B5A3-F393-E0A9-E50E24DCCA9E",
-            "crawlSpeedMs",
-            []() { return crawlSpeedMs; },
-            [](uint16_t v) {
-                Serial.printf("setCrawlSpeedMs %d\n", v);
-                crawlSpeedMs = v;
-                EEPROM.put(0, crawlSpeedMs);
-                EEPROM.commit();
-                ConfigManager::instance().notifyChangeUint("crawlSpeedMs", crawlSpeedMs);
-            }
+                "00400001-B5A3-F393-E0A9-E50E24DCCA9E",
+                "crawlSpeedMs",
+                []() { return crawlSpeedMs; },
+                [](uint16_t v) {
+                    DEBUG_PRINTF("setCrawlSpeedMs %d\n", v);
+                    crawlSpeedMs = v;
+                    EEPROM.put(0, crawlSpeedMs);
+                    EEPROM.commit();
+                    ConfigManager::instance().notifyChangeUint("crawlSpeedMs", crawlSpeedMs);
+                }
         )));
         list.push_back(std::unique_ptr<IConfigParameter>(new ConfigParameter<bool>(
-            "01400002-B5A3-F393-E0A9-E50E24DCCA9E",
-            "reverseStrip",
-            []() { return reverseStrip; },
-            [](bool v) {
-                Serial.printf("setReverseStrip %d\n", v);
-                reverseStrip = v;
-                uint8_t val = v ? 1 : 0;
-                EEPROM.put(sizeof(crawlSpeedMs), val);
-                EEPROM.commit();
-                ConfigManager::instance().notifyChangeBool("reverseStrip", reverseStrip);
-            }
+                "01400002-B5A3-F393-E0A9-E50E24DCCA9E",
+                "reverseStrip",
+                []() { return reverseStrip; },
+                [](bool v) {
+                    DEBUG_PRINTF("setReverseStrip %d\n", v);
+                    reverseStrip = v;
+                    uint8_t val = v ? 1 : 0;
+                    EEPROM.put(sizeof(crawlSpeedMs), val);
+                    EEPROM.commit();
+                    ConfigManager::instance().notifyChangeBool("reverseStrip", reverseStrip);
+                }
         )));
     }
 
     // ---- accessors ----
     uint16_t getCrawlSpeedMs() { return crawlSpeedMs; }
-    bool     getReverseStrip() { return reverseStrip; }
+
+    bool getReverseStrip() { return reverseStrip; }
 }
