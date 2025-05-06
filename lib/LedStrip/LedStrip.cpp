@@ -1,6 +1,7 @@
 #include <../../include/Config.h> // ensure DEFAULT_CRAWL_SPEED_MS is available
 #include <debug.h>
 #include "LedStrip.h"
+#include <FastLED.h>
 
 void LedStrip::setCrawlSpeed(uint16_t ms) {
     crawlSpeedMs = ms;
@@ -11,8 +12,9 @@ void LedStrip::setReverseStrip(bool reverse) {
 }
 
 void LedStrip::begin() {
-    strip.begin();
-    strip.show();                // clears strip
+    FastLED.addLeds<NEOPIXEL, cfg::DATA_PIN>(ledsArr, cfg::LED_COUNT);
+    FastLED.clear();
+    FastLED.show();
 }
 
 void LedStrip::update(float accelScale, bool isSleeping) {
@@ -47,7 +49,7 @@ uint32_t LedStrip::colorWheel(uint16_t color, float brightness) const {
     r *= brightness;
     g *= brightness;
     b *= brightness;
-    return strip.Color(r, g, b);
+    return (r << 16) | (g << 8) | b;
 }
 
 uint32_t LedStrip::colorForScale(float scale) const {
@@ -86,21 +88,36 @@ void LedStrip::crawl(uint32_t color) {
         int perSide = cfg::LED_COUNT / 2;
 
         const uint32_t *p = lightArray;
-        for (int led = center - 1; led >= center - 1 - perSide; --led)
-            strip.setPixelColor(mapIndex(constrainWrap(led, 0, cfg::LED_COUNT - 1)), *p++);
+        for (int led = center - 1; led >= center - 1 - perSide; --led) {
+            uint32_t c = *p++;
+            uint8_t r = (c >> 16) & 0xFF;
+            uint8_t g = (c >> 8) & 0xFF;
+            uint8_t b = c & 0xFF;
+            ledsArr[mapIndex(constrainWrap(led, 0, cfg::LED_COUNT - 1))] = CRGB(r, g, b);
+        }
 
         p = lightArray;
-        for (int led = center; led < center + perSide; ++led)
-            strip.setPixelColor(mapIndex(constrainWrap(led, 0, cfg::LED_COUNT - 1)), *p++);
+        for (int led = center; led < center + perSide; ++led) {
+            uint32_t c = *p++;
+            uint8_t r = (c >> 16) & 0xFF;
+            uint8_t g = (c >> 8) & 0xFF;
+            uint8_t b = c & 0xFF;
+            ledsArr[mapIndex(constrainWrap(led, 0, cfg::LED_COUNT - 1))] = CRGB(r, g, b);
+        }
 
-        strip.show();
+        FastLED.show();
         return;
     }
 
-    for (int i = 0; i < cfg::LED_COUNT; ++i)
-        strip.setPixelColor(mapIndex(i), lightArray[i]);
+    for (int i = 0; i < cfg::LED_COUNT; ++i) {
+        uint32_t c = lightArray[i];
+        uint8_t r = (c >> 16) & 0xFF;
+        uint8_t g = (c >> 8) & 0xFF;
+        uint8_t b = c & 0xFF;
+        ledsArr[mapIndex(i)] = CRGB(r, g, b);
+    }
 
-    strip.show();
+    FastLED.show();
 }
 
 /* ------------ breathing animation -------------- */
@@ -123,11 +140,11 @@ void LedStrip::breathe() {
     lastBreath = now;
 
     uint8_t key = KEYFRAMES[keyframePtr];
-    for (int i = 0; i < strip.numPixels(); ++i) {
+    for (int i = 0; i < cfg::LED_COUNT; ++i) {
         uint8_t v = (cfg::SLEEP_BRIGHTNESS * 127 * key) / 256;
-        strip.setPixelColor(mapIndex(i), v, 0, 0);
+        ledsArr[mapIndex(i)] = CRGB(v, 0, 0);
     }
-    strip.show();
+    FastLED.show();
 
     if (++keyframePtr >= frames) keyframePtr = 0;
 }
@@ -138,16 +155,20 @@ void LedStrip::showSolid(float scale) {
     if (c == lastColor) return;
     lastColor = c;
 
-    for (int i = 0; i < cfg::LED_COUNT; ++i)
-        strip.setPixelColor(mapIndex(i), c);
+    for (int i = 0; i < cfg::LED_COUNT; ++i) {
+        uint8_t r = (c >> 16) & 0xFF;
+        uint8_t g = (c >> 8) & 0xFF;
+        uint8_t b = c & 0xFF;
+        ledsArr[mapIndex(i)] = CRGB(r, g, b);
+    }
 
-    strip.show();
+    FastLED.show();
 }
 
 /* ------------ public helpers ------------------ */
 void LedStrip::colorOff() {
-    strip.clear();
-    strip.show();
+    FastLED.clear();
+    FastLED.show();
 }
 
 void LedStrip::showCalibrationPattern() {
@@ -159,11 +180,11 @@ void LedStrip::showCalibrationPattern() {
     float brightness = 0.3;
 
     // Red
-    strip.setPixelColor(mapIndex(mid - 1), strip.Color(127 * brightness, 0, 0));
+    ledsArr[mapIndex(mid - 1)] = CRGB(static_cast<uint8_t>(127 * brightness), 0, 0);
     // Green
-    strip.setPixelColor(mapIndex(mid), strip.Color(0, 127 * brightness, 0));
+    ledsArr[mapIndex(mid)] = CRGB(0, static_cast<uint8_t>(127 * brightness), 0);
     // Blue
-    strip.setPixelColor(mapIndex(mid + 1), strip.Color(0, 0, 127 * brightness));
+    ledsArr[mapIndex(mid + 1)] = CRGB(0, 0, static_cast<uint8_t>(127 * brightness));
 
-    strip.show();
+    FastLED.show();
 }
