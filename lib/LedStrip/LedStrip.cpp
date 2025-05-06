@@ -3,6 +3,8 @@
 #include "LedStrip.h"
 #include <FastLED.h>
 
+// Circular buffer head index for crawl animation
+
 void LedStrip::setCrawlSpeed(uint16_t ms) {
     crawlSpeedMs = ms;
 }
@@ -70,53 +72,49 @@ inline int LedStrip::mapIndex(int logical) const {
 }
 
 /* ------------ crawl animation ------------------ */
+int head = 0; // Circular buffer head index
 void LedStrip::crawl(uint32_t color) {
-    uint32_t head = lightArray[0];
-    lightArray[0] = color;
+    // Determine previous head color
+    int prevHeadIdx = head;
+    uint32_t prevHeadColor = lightArray[prevHeadIdx];
 
     unsigned long now = millis();
-    bool needShift = (now - lastCrawl) > crawlSpeedMs || (color != head);
+    bool needShift = (now - lastCrawl) > crawlSpeedMs || (color != prevHeadColor);
     if (!needShift) return;
 
     lastCrawl = now;
 
-    for (int i = cfg::LED_COUNT - 1; i > 0; --i)
-        lightArray[i] = lightArray[i - 1];
+    // Advance head backwards (circular)
+    head = (head + cfg::LED_COUNT - 1) % cfg::LED_COUNT;
+    lightArray[head] = color;
 
     if (cfg::ENABLE_SPLIT_STRIP) {
         int center = cfg::SPLIT_STRIP_CENTER;
         int perSide = cfg::LED_COUNT / 2;
 
-        const uint32_t *p = lightArray;
-        for (int led = center - 1; led >= center - 1 - perSide; --led) {
-            uint32_t c = *p++;
+        for (int i = 0; i < perSide; ++i) {
+            uint32_t c = lightArray[(head + i) % cfg::LED_COUNT];
             uint8_t r = (c >> 16) & 0xFF;
             uint8_t g = (c >> 8) & 0xFF;
             uint8_t b = c & 0xFF;
-            ledsArr[mapIndex(constrainWrap(led, 0, cfg::LED_COUNT - 1))] = CRGB(r, g, b);
+            ledsArr[mapIndex(center - 1 - i)] = CRGB(r, g, b);
         }
-
-        p = lightArray;
-        for (int led = center; led < center + perSide; ++led) {
-            uint32_t c = *p++;
+        for (int i = 0; i < perSide; ++i) {
+            uint32_t c = lightArray[(head + perSide + i) % cfg::LED_COUNT];
             uint8_t r = (c >> 16) & 0xFF;
             uint8_t g = (c >> 8) & 0xFF;
             uint8_t b = c & 0xFF;
-            ledsArr[mapIndex(constrainWrap(led, 0, cfg::LED_COUNT - 1))] = CRGB(r, g, b);
+            ledsArr[mapIndex(center + i)] = CRGB(r, g, b);
         }
-
-        FastLED.show();
-        return;
+    } else {
+        for (int i = 0; i < cfg::LED_COUNT; ++i) {
+            uint32_t c = lightArray[(head + i) % cfg::LED_COUNT];
+            uint8_t r = (c >> 16) & 0xFF;
+            uint8_t g = (c >> 8) & 0xFF;
+            uint8_t b = c & 0xFF;
+            ledsArr[mapIndex(i)] = CRGB(r, g, b);
+        }
     }
-
-    for (int i = 0; i < cfg::LED_COUNT; ++i) {
-        uint32_t c = lightArray[i];
-        uint8_t r = (c >> 16) & 0xFF;
-        uint8_t g = (c >> 8) & 0xFF;
-        uint8_t b = c & 0xFF;
-        ledsArr[mapIndex(i)] = CRGB(r, g, b);
-    }
-
     FastLED.show();
 }
 
