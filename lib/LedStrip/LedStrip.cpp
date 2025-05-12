@@ -5,6 +5,7 @@
 
 // Definition of static wheel array
 CRGB LedStrip::wheel[LedStrip::COLOR_RANGE];
+CRGB LedStrip::scaledWheel[LedStrip::COLOR_RANGE][LedStrip::BRIGHTNESS_LEVELS];
 
 // Definition of static physical index array
 int LedStrip::physicalIndex[cfg::LED_COUNT];
@@ -31,6 +32,21 @@ void LedStrip::begin() {
         uint8_t g = (c >> 8) & 0xFF;
         uint8_t b = c & 0xFF;
         wheel[i] = CRGB(r, g, b);
+    }
+
+    // Build brightness-scaled wheels for discrete levels
+    for (int h = 0; h < COLOR_RANGE; ++h) {
+        for (int b = 0; b < BRIGHTNESS_LEVELS; ++b) {
+            // Compute fixed-point brightness factor
+            // bf = MIN_BRIGHTNESS + (b/(BRIGHTNESS_LEVELS-1))*(MAX_BRIGHTNESS - MIN_BRIGHTNESS)
+            uint8_t brightness8 = static_cast<uint8_t>(
+                    (cfg::MIN_BRIGHTNESS * 255) +
+                    (b * (cfg::MAX_BRIGHTNESS * 255 - cfg::MIN_BRIGHTNESS * 255) / (BRIGHTNESS_LEVELS - 1))
+            );
+            CRGB c = wheel[h];
+            c.nscale8(brightness8);
+            scaledWheel[h][b] = c;
+        }
     }
 
     // Build physical index map
@@ -76,12 +92,13 @@ uint32_t LedStrip::colorWheel(uint16_t color, float brightness) {
 
 CRGB LedStrip::colorForScale(float scale) const {
     scale = constrain(scale, 0.0f, 1.0f);
-    uint16_t idx = static_cast<uint16_t>(scale * (COLOR_RANGE - 1));
-    float bf = cfg::MIN_BRIGHTNESS + scale * (cfg::MAX_BRIGHTNESS - cfg::MIN_BRIGHTNESS);
-    bf = constrain(bf, 0.0f, 1.0f);
-    CRGB c = wheel[idx];
-    c.nscale8(static_cast<uint8_t>(bf * 255));
-    return c;
+    // Hue index
+    uint16_t h = static_cast<uint16_t>(scale * (COLOR_RANGE - 1));
+    // Brightness index using integer math
+    uint8_t bIdx = static_cast<uint8_t>(
+            (scale * (BRIGHTNESS_LEVELS - 1)) + 0.5f
+    );
+    return scaledWheel[h][bIdx];
 }
 
 inline int LedStrip::constrainWrap(int v, int low, int high) {

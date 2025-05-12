@@ -69,7 +69,7 @@ void setup() {
     // LSM303_CTRL_REG1_A = 0x20, address = 0x19 (0x32>>1)
     Wire.beginTransmission(0x19);
     Wire.write(0x20);       // CTRL_REG1_A
-    Wire.write(0x57);       // 0b01010111: 50Hz ODR, normal mode, XYZ enabled
+    Wire.write(0x67);       // 0b01100111: 100Hz ODR, normal mode, XYZ enabled
     Wire.endTransmission();
 
     if (!accelSensor.begin()) {
@@ -86,7 +86,7 @@ void loop() {
     loopDebug();
 
     uint32_t now = millis();
-    if (now - lastPollTime >= 20) {           // 20 ms => 50 Hz poll rate
+    if (now - lastPollTime >= 10) {           // 10 ms => 100 Hz poll rate
         accelSensor.poll();
         lastScale = accelSensor.currentAccelScale();
         lastSleeping = accelSensor.isSleeping();

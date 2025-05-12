@@ -36,10 +36,9 @@ private:
 
     static inline int constrainWrap(int v, int low, int high);
 
-    void stripShow();
-
     /* ---------- state ---------- */
     static constexpr uint16_t COLOR_RANGE = 384;
+    static constexpr uint8_t BRIGHTNESS_LEVELS = 16;
 
     CRGB ledsArr[cfg::LED_COUNT];
     CRGB lightArray[cfg::LED_COUNT]{};
@@ -54,6 +53,8 @@ private:
     bool reverseStrip = cfg::DEFAULT_REVERSE_STRIP;
 
 
-    static CRGB wheel[384];
+    static CRGB wheel[COLOR_RANGE];
+    // Precomputed brightness-scaled wheels [hue][level]
+    static CRGB scaledWheel[COLOR_RANGE][BRIGHTNESS_LEVELS];
     static int physicalIndex[cfg::LED_COUNT];
 };
