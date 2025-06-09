@@ -32,10 +32,6 @@ private:
 
     static uint32_t colorWheel(uint16_t colorIdx, float brightness);
 
-    inline int mapIndex(int logical) const;
-
-    static inline int constrainWrap(int v, int low, int high);
-
     /* ---------- state ---------- */
     static constexpr uint16_t COLOR_RANGE = 384;
     static constexpr uint8_t BRIGHTNESS_LEVELS = 16;
@@ -57,4 +53,6 @@ private:
     // Precomputed brightness-scaled wheels [hue][level]
     static CRGB scaledWheel[COLOR_RANGE][BRIGHTNESS_LEVELS];
     static int physicalIndex[cfg::LED_COUNT];
+
+    void buildIndexMap() const;
 };

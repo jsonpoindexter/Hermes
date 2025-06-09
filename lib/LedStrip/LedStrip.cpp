@@ -18,6 +18,7 @@ void LedStrip::setCrawlSpeed(uint16_t ms) {
 
 void LedStrip::setReverseStrip(bool reverse) {
     reverseStrip = reverse;
+    LedStrip::buildIndexMap();
 }
 
 void LedStrip::begin() {
@@ -49,11 +50,14 @@ void LedStrip::begin() {
         }
     }
 
-    // Build physical index map
+    LedStrip::buildIndexMap();
+}
+
+void LedStrip::buildIndexMap() const {
     for (uint16_t i = 0; i < cfg::LED_COUNT; ++i) {
         physicalIndex[i] = reverseStrip ? (cfg::LED_COUNT - 1 - i) : i;
     }
-}
+};
 
 void LedStrip::update(float accelScale, bool isSleeping) {
     sleeping = isSleeping;
@@ -99,16 +103,6 @@ CRGB LedStrip::colorForScale(float scale) const {
             (scale * (BRIGHTNESS_LEVELS - 1)) + 0.5f
     );
     return scaledWheel[h][bIdx];
-}
-
-inline int LedStrip::constrainWrap(int v, int low, int high) {
-    if (v < low) return high - (low - v) + 1;
-    if (v > high) return low + (v - high) - 1;
-    return v;
-}
-
-inline int LedStrip::mapIndex(int logical) const {
-    return reverseStrip ? (cfg::LED_COUNT - 1 - logical) : logical;
 }
 
 /* ------------ crawl animation ------------------ */
