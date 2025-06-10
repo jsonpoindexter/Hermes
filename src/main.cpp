@@ -14,9 +14,9 @@
 
 #include <LedStrip.h>
 
-static BLEConfigService bleConfig;
-static LedStrip leds;
-static AccelSensor accelSensor;
+BLEConfigService bleConfig;
+LedStrip leds;
+AccelSensor accelSensor;
 
 #define DEBUG 1
 
@@ -86,6 +86,7 @@ void setup() {
     if (!accelSensor.begin()) {
         DEBUG_PRINTF("Accel init failed");
     }
+    leds.showingCalibrationPattern = false;
 }
 
 // Throttle accelerometer polling to 50 Hz

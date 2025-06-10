@@ -20,6 +20,7 @@ public:
 
     static void colorOff();
 
+    bool showingCalibrationPattern;
 private:
     /* ---------- helpers ---------- */
     void crawl(const CRGB &color);
@@ -55,4 +56,5 @@ private:
     static int physicalIndex[cfg::LED_COUNT];
 
     void buildIndexMap() const;
+
 };

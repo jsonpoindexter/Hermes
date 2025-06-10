@@ -19,8 +19,9 @@ public:
 
     void setSensitivity(uint16_t sensitivity);
 
-private:
     void calibrate();
+
+private:
 
     bool fillBuffer();
 

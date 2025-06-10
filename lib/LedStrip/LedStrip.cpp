@@ -106,6 +106,10 @@ CRGB LedStrip::colorForScale(float scale) const {
 /* ------------ crawl animation ------------------ */
 int head = 0; // Circular buffer head index
 void LedStrip::crawl(const CRGB &color) {
+    if (showingCalibrationPattern) {
+        // Don't crawl while showing calibration pattern
+        return;
+    }
     // Determine previous head color
     int prevHeadIdx = head;
     CRGB prevHeadColor = lightArray[prevHeadIdx];
@@ -183,6 +187,8 @@ void LedStrip::colorOff() {
 
 void LedStrip::showCalibrationPattern() {
     DEBUG_PRINTLN("showCalibrationPattern...");
+
+    LedStrip::showingCalibrationPattern = true;
 
     LedStrip::colorOff();
 
