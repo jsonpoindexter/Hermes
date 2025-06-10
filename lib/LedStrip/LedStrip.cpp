@@ -50,12 +50,12 @@ void LedStrip::update(uint8_t scale8, bool isSleeping) {
 /* ------------ colorForScale ------------------ */
 CRGB LedStrip::colorForScale(uint8_t scale8) {
     // Hue 0-255 maps directly
-    CRGB c = wheel[scale8];
+    CRGB color = wheel[scale8];
     // Brightness scaling 0-255 → MIN..MAX (uint8 math)
     uint8_t b8 = cfg::MIN_BRIGHTNESS +
-                 (uint16_t(scale8) * (cfg::MAX_BRIGHTNESS - cfg::MIN_BRIGHTNESS)) / 255;
-    c.nscale8_video(b8);
-    return c;
+                 scale8 * (cfg::MAX_BRIGHTNESS - cfg::MIN_BRIGHTNESS) / 255;
+    color.nscale8_video(b8);
+    return color;
 }
 
 /* ------------ crawl animation ------------------ */
@@ -117,7 +117,7 @@ void LedStrip::breathe() {
     lastBreath = now;
 
     uint8_t key = KEYFRAMES[keyframePtr];
-    uint8_t v = (uint16_t(cfg::SLEEP_BRIGHTNESS) * key) / 255;
+    uint8_t v = (cfg::SLEEP_BRIGHTNESS * key) / 255;
     fill_solid(ledsArr, cfg::LED_COUNT, CRGB(v, 0, 0));
     FastLED.show();
 

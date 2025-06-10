@@ -31,7 +31,7 @@ namespace cfg {
 // --------- Brightness ------------
     constexpr uint8_t MAX_BRIGHTNESS = 255;
     constexpr uint8_t MIN_BRIGHTNESS = 255;
-    constexpr uint8_t SLEEP_BRIGHTNESS = 0.30f;
+    constexpr uint8_t SLEEP_BRIGHTNESS = 64;
 
 // --------- Debug -----------------
     constexpr bool WAIT_FOR_KEYBOARD = false;
