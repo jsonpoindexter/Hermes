@@ -33,6 +33,9 @@ namespace cfg {
     constexpr uint8_t MIN_BRIGHTNESS = 255;
     constexpr uint8_t SLEEP_BRIGHTNESS = 64;
 
+// --------- Color -----------------
+    constexpr uint8_t DEFAULT_BASE_HUE = 0;     // 0‑255 hue offset for the wheel
+
 // --------- Debug -----------------
     constexpr bool WAIT_FOR_KEYBOARD = false;
     constexpr bool PRINT_LOOP_TIME = false;
@@ -47,6 +50,8 @@ namespace cfg {
     bool getReverseStrip();
 
     uint16_t getHermesSensitivity();
+
+    uint8_t getBaseHue();
 
     // register config parameters
     void registerParameters(std::vector<std::unique_ptr<IConfigParameter>> &list);

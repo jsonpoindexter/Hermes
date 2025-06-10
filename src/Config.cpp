@@ -14,10 +14,11 @@ namespace cfg {
     uint16_t crawlSpeedMs = DEFAULT_CRAWL_SPEED_MS;
     bool reverseStrip = DEFAULT_REVERSE_STRIP;
     uint16_t hermesSensitivity = DEFAULT_HERMES_SENSITIVITY;
+    uint8_t baseHue = DEFAULT_BASE_HUE;
 
     void begin() {
-        // reserve enough EEPROM for both crawlSpeedMs (2 bytes), reverseStrip (1 byte) and hermesSensitivity (2 bytes)
-        EEPROM.begin(sizeof(crawlSpeedMs) + sizeof(reverseStrip) + sizeof(hermesSensitivity));
+        // reserve enough EEPROM for crawlSpeedMs (2), reverseStrip (1), hermesSensitivity (2), baseHue (1)
+        EEPROM.begin(sizeof(crawlSpeedMs) + sizeof(reverseStrip) + sizeof(hermesSensitivity) + sizeof(baseHue));
         // read back; if never written it will be 0xFFFF
         uint16_t storedCrawlSpeed;
         EEPROM.get(0, storedCrawlSpeed);
@@ -35,6 +36,11 @@ namespace cfg {
         EEPROM.get(sizeof(crawlSpeedMs) + sizeof(reverseStrip), storedSensitivity);
         if (storedSensitivity != 0xFFFF) {
             hermesSensitivity = storedSensitivity;
+        }
+        uint8_t storedHue;
+        EEPROM.get(sizeof(crawlSpeedMs) + sizeof(reverseStrip) + sizeof(hermesSensitivity), storedHue);
+        if (storedHue != 0xFF) {
+            baseHue = storedHue;
         }
     }
 
@@ -90,6 +96,18 @@ namespace cfg {
                     }
                 }
         )));
+        list.push_back(std::unique_ptr<IConfigParameter>(new ConfigParameter<uint8_t>(
+                "00400005-B5A3-F393-E0A9-E50E24DCCA9E",   // UUID for baseHue
+                "baseHue",
+                []() { return baseHue; },
+                [](uint8_t v) {
+                    DEBUG_PRINTF("baseHue %u\n", v);
+                    baseHue = v;
+                    EEPROM.put(sizeof(crawlSpeedMs) + sizeof(reverseStrip) + sizeof(hermesSensitivity), v);
+                    EEPROM.commit();
+                    ConfigManager::instance().notifyChangeUint("baseHue", baseHue);
+                }
+        )));
     }
 
 
@@ -99,4 +117,6 @@ namespace cfg {
     bool getReverseStrip() { return reverseStrip; }
 
     uint16_t getHermesSensitivity() { return hermesSensitivity; }
+
+    uint8_t getBaseHue() { return baseHue; }
 }

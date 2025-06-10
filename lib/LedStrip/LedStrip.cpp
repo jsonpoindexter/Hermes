@@ -49,8 +49,8 @@ void LedStrip::update(uint8_t scale8, bool isSleeping) {
 
 /* ------------ colorForScale ------------------ */
 CRGB LedStrip::colorForScale(uint8_t scale8) {
-    // Hue 0-255 maps directly
-    CRGB color = wheel[scale8];
+    // Hue 0-255 maps directly, shifted by base hue
+    CRGB color = wheel[(scale8 + cfg::getBaseHue()) & 0xFF];
     // Brightness scaling 0-255 → MIN..MAX (uint8 math)
     uint8_t b8 = cfg::MIN_BRIGHTNESS +
                  scale8 * (cfg::MAX_BRIGHTNESS - cfg::MIN_BRIGHTNESS) / 255;
@@ -117,21 +117,12 @@ void LedStrip::breathe() {
     lastBreath = now;
 
     uint8_t key = KEYFRAMES[keyframePtr];
-    uint8_t v = (cfg::SLEEP_BRIGHTNESS * key) / 255;
-    fill_solid(ledsArr, cfg::LED_COUNT, CRGB(v, 0, 0));
+    uint8_t v = (uint16_t(cfg::SLEEP_BRIGHTNESS) * key) / 255;   // 0‑255 brightness
+    CRGB c = CHSV(cfg::getBaseHue(), 255, v);
+    fill_solid(ledsArr, cfg::LED_COUNT, c);
     FastLED.show();
 
     if (++keyframePtr >= frames) keyframePtr = 0;
-}
-
-/* ------------ misc ----------------------------- */
-void LedStrip::showSolid(uint8_t scale8) {
-    CRGB c = colorForScale(scale8);
-    if (c == lastColor) return;
-    lastColor = c;
-
-    fill_solid(ledsArr, cfg::LED_COUNT, c);
-    FastLED.show();
 }
 
 /* ------------ public helpers ------------------ */

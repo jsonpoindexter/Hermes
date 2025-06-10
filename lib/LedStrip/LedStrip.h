@@ -27,8 +27,6 @@ private:
 
     void breathe();
 
-    void showSolid(uint8_t scale8);
-
     static CRGB colorForScale(uint8_t scale8);
 
     /* ---------- state ---------- */
