@@ -4,7 +4,7 @@
 
 // Debug prints control
 // Set to 1 to enable debug prints, 0 to disable
-#define CONFIG_DEBUG 0
+#define CONFIG_DEBUG 1
 
 #include <vector>
 #include <memory>
@@ -19,7 +19,7 @@ namespace cfg {
     constexpr bool DEFAULT_REVERSE_STRIP = true;
 
 // --------- Animation --------------
-    constexpr float HERMES_SENSITIVITY = 1600.0;
+    constexpr uint16_t DEFAULT_HERMES_SENSITIVITY = 1600; // lower is more sensitive
     constexpr bool ENABLE_SPLIT_STRIP = false;
     constexpr uint16_t SPLIT_STRIP_CENTER = 0;
 
@@ -35,7 +35,7 @@ namespace cfg {
 
 // --------- Debug -----------------
     constexpr bool WAIT_FOR_KEYBOARD = false;
-    constexpr bool PRINT_LOOP_TIME = true;
+    constexpr bool PRINT_LOOP_TIME = false;
     constexpr uint16_t DEFAULT_CRAWL_SPEED_MS = 2;
 
     // call once in setup()
@@ -45,6 +45,8 @@ namespace cfg {
     uint16_t getCrawlSpeedMs();
 
     bool getReverseStrip();
+
+    uint16_t getHermesSensitivity();
 
     // register config parameters
     void registerParameters(std::vector<std::unique_ptr<IConfigParameter>> &list);

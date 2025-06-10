@@ -1,6 +1,6 @@
 #include "AccelSensor.h"
 #include <Wire.h>
-#include <math.h>
+#include <cmath>
 #include "debug.h"
 
 AccelSensor::AccelSensor()
@@ -18,6 +18,11 @@ bool AccelSensor::begin() {
     }
     calibrate();
     return true;
+}
+
+void AccelSensor::setSensitivity(uint16_t sensitivity) {
+    DEBUG_PRINTF("setSensitivity %u\n", sensitivity);
+    hermesSensitivity = sensitivity;
 }
 
 void AccelSensor::calibrate() {
@@ -83,11 +88,11 @@ bool AccelSensor::fillBuffer() {
     return true;
 }
 
-double AccelSensor::getMagnitude(const AccelReading &r) const {
+double AccelSensor::getMagnitude(const AccelReading &r) {
     return sqrt(r.x * r.x + r.y * r.y + r.z * r.z);
 }
 
-bool AccelSensor::equalReadings(const AccelReading &a, const AccelReading &b) const {
+bool AccelSensor::equalReadings(const AccelReading &a, const AccelReading &b) {
     return a.x == b.x && a.y == b.y && a.z == b.z;
 }
 
@@ -104,9 +109,9 @@ const AccelReading &AccelSensor::getPreviousReading() const {
     return accelBuffer[prev];
 }
 
-float AccelSensor::currentAccelScale() const {
+double AccelSensor::currentAccelScale() const {
     double delta = abs(getMagnitude(getCurrentReading()) - calibration);
-    return delta / cfg::HERMES_SENSITIVITY;
+    return delta / hermesSensitivity;
 }
 
 bool AccelSensor::isSleeping() const {

@@ -18,6 +18,7 @@ static BLEConfigService bleConfig;
 static LedStrip leds;
 static AccelSensor accelSensor;
 
+#define DEBUG 1
 
 void setup() {
 #ifdef DEBUG
@@ -30,6 +31,10 @@ void setup() {
     bleConfig.begin();
 
     DEBUG_PRINTLN("Starting Hermes LED shoes...");
+
+    DEBUG_PRINT("Current config: ");
+    DEBUG_PRINTF("crawlSpeedMs=%u, reverseStrip=%d, hermesSensitivity=%u\n",
+                 cfg::getCrawlSpeedMs(), cfg::getReverseStrip(), cfg::getHermesSensitivity());
 
     if (cfg::WAIT_FOR_KEYBOARD) {
         // Wait for serial to initalize.
@@ -57,10 +62,16 @@ void setup() {
         DEBUG_PRINTF("initReverseStrip %d\n", initReverse);
         leds.setReverseStrip(initReverse);
 
+        uint16_t hermesSensitivity = ConfigManager::instance().getUint("hermesSensitivity");
+        DEBUG_PRINTF("initHermesSensitivity %u\n", hermesSensitivity);
+        accelSensor.setSensitivity(hermesSensitivity);
+
         ConfigManager::instance().onChangeUint("crawlSpeedMs",
                                                [&](uint16_t ms) { leds.setCrawlSpeed(ms); });
         ConfigManager::instance().onChangeBool("reverseStrip",
                                                [&](bool rev) { leds.setReverseStrip(rev); });
+        ConfigManager::instance().onChangeUint("hermesSensitivity",
+                                               [&](uint16_t sens) { accelSensor.setSensitivity(sens); });
     }
 
     // Initialize I2C

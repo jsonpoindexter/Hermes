@@ -1,4 +1,5 @@
 #pragma once
+
 #include <Arduino.h>
 #include <Adafruit_LSM303_Old.h>
 #include "../../include/AccelReading.h"
@@ -7,25 +8,40 @@
 class AccelSensor {
 public:
     AccelSensor();
+
     bool begin();
+
     void poll();
-    float currentAccelScale() const;
+
+    double currentAccelScale() const;
+
     bool isSleeping() const;
+
+    void setSensitivity(uint16_t sensitivity);
 
 private:
     void calibrate();
+
     bool fillBuffer();
-    double getMagnitude(const AccelReading& r) const;
-    bool equalReadings(const AccelReading& a, const AccelReading& b) const;
+
+    static double getMagnitude(const AccelReading &r);
+
+    static bool equalReadings(const AccelReading &a, const AccelReading &b);
+
     int bufferSize() const;
-    const AccelReading& getCurrentReading() const;
-    const AccelReading& getPreviousReading() const;
+
+    const AccelReading &getCurrentReading() const;
+
+    const AccelReading &getPreviousReading() const;
 
     Adafruit_LSM303_Old lsm;
-    AccelReading accelBuffer[10];
+    AccelReading accelBuffer[10]{};
     int bufferPosition;
     unsigned long calibrationLEDTime;
     bool calibrationLEDOn;
     unsigned long lastSignificantMovementTime;
     double calibration;
+
+    uint16_t hermesSensitivity = cfg::DEFAULT_HERMES_SENSITIVITY;
+
 };

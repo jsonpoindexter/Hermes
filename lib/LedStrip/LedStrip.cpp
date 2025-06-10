@@ -1,4 +1,4 @@
-#include <../../include/Config.h> // ensure DEFAULT_CRAWL_SPEED_MS is available
+#include <../../include/Config.h>
 #include <debug.h>
 #include "LedStrip.h"
 #include <FastLED.h>
@@ -9,8 +9,6 @@ CRGB LedStrip::scaledWheel[LedStrip::COLOR_RANGE][LedStrip::BRIGHTNESS_LEVELS];
 
 // Definition of static physical index array
 int LedStrip::physicalIndex[cfg::LED_COUNT];
-
-// Circular buffer head index for crawl animation
 
 void LedStrip::setCrawlSpeed(uint16_t ms) {
     crawlSpeedMs = ms;
