@@ -4,7 +4,7 @@
 
 // Debug prints control
 // Set to 1 to enable debug prints, 0 to disable
-#define CONFIG_DEBUG 1
+#define CONFIG_DEBUG 0
 
 #include <vector>
 #include <memory>
@@ -29,9 +29,9 @@ namespace cfg {
     constexpr uint8_t SLEEP_SENSITIVITY = 25;
 
 // --------- Brightness ------------
-    constexpr float MAX_BRIGHTNESS = 1.0f;
-    constexpr float MIN_BRIGHTNESS = 1.0f;
-    constexpr float SLEEP_BRIGHTNESS = 0.30f;
+    constexpr uint8_t MAX_BRIGHTNESS = 255;
+    constexpr uint8_t MIN_BRIGHTNESS = 255;
+    constexpr uint8_t SLEEP_BRIGHTNESS = 0.30f;
 
 // --------- Debug -----------------
     constexpr bool WAIT_FOR_KEYBOARD = false;

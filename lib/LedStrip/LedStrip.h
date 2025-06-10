@@ -8,7 +8,7 @@ class LedStrip {
 public:
     void begin();
 
-    void update(float accelScale, bool isSleeping);
+    void update(uint8_t scale8, bool isSleeping);
 
     // configure crawl speed at runtime
     void setCrawlSpeed(uint16_t ms);
@@ -27,15 +27,12 @@ private:
 
     void breathe();
 
-    void showSolid(float scale);
+    void showSolid(uint8_t scale8);
 
-    CRGB colorForScale(float scale) const;
-
-    static uint32_t colorWheel(uint16_t colorIdx, float brightness);
+    static CRGB colorForScale(uint8_t scale8);
 
     /* ---------- state ---------- */
-    static constexpr uint16_t COLOR_RANGE = 384;
-    static constexpr uint8_t BRIGHTNESS_LEVELS = 16;
+    static constexpr uint16_t COLOR_RANGE = 256;   // 0‑255 hue wheel
 
     CRGB ledsArr[cfg::LED_COUNT];
     CRGB lightArray[cfg::LED_COUNT]{};
@@ -51,8 +48,6 @@ private:
 
 
     static CRGB wheel[COLOR_RANGE];
-    // Precomputed brightness-scaled wheels [hue][level]
-    static CRGB scaledWheel[COLOR_RANGE][BRIGHTNESS_LEVELS];
     static int physicalIndex[cfg::LED_COUNT];
 
     void buildIndexMap() const;

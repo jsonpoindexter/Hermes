@@ -21,6 +21,8 @@ public:
 
     void calibrate();
 
+    uint8_t currentScale8() const;
+
 private:
 
     bool fillBuffer();

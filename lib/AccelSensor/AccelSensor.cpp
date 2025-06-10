@@ -117,3 +117,9 @@ double AccelSensor::currentAccelScale() const {
 bool AccelSensor::isSleeping() const {
     return (millis() - lastSignificantMovementTime) >= cfg::SLEEP_WAIT_TIME_MS;
 }
+
+uint8_t AccelSensor::currentScale8() const {
+    double delta = fabs(getMagnitude(getCurrentReading()) - calibration);
+    uint32_t scaled = static_cast<uint32_t>((delta * 255.0) / hermesSensitivity);
+    return scaled > 255 ? 255 : static_cast<uint8_t>(scaled);
+}

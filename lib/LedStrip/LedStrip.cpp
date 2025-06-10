@@ -5,7 +5,6 @@
 
 // Definition of static wheel array
 CRGB LedStrip::wheel[LedStrip::COLOR_RANGE];
-CRGB LedStrip::scaledWheel[LedStrip::COLOR_RANGE][LedStrip::BRIGHTNESS_LEVELS];
 
 // Definition of static physical index array
 int LedStrip::physicalIndex[cfg::LED_COUNT];
@@ -24,28 +23,9 @@ void LedStrip::begin() {
     FastLED.clear();
     FastLED.show();
 
-    // Build 384-step color wheel cache
-    for (int i = 0; i < COLOR_RANGE; ++i) {
-        uint32_t c = colorWheel(i, 1.0f);
-        uint8_t r = (c >> 16) & 0xFF;
-        uint8_t g = (c >> 8) & 0xFF;
-        uint8_t b = c & 0xFF;
-        wheel[i] = CRGB(r, g, b);
-    }
-
-    // Build brightness-scaled wheels for discrete levels
-    for (int h = 0; h < COLOR_RANGE; ++h) {
-        for (int b = 0; b < BRIGHTNESS_LEVELS; ++b) {
-            // Compute fixed-point brightness factor
-            // bf = MIN_BRIGHTNESS + (b/(BRIGHTNESS_LEVELS-1))*(MAX_BRIGHTNESS - MIN_BRIGHTNESS)
-            uint8_t brightness8 = static_cast<uint8_t>(
-                    (cfg::MIN_BRIGHTNESS * 255) +
-                    (b * (cfg::MAX_BRIGHTNESS * 255 - cfg::MIN_BRIGHTNESS * 255) / (BRIGHTNESS_LEVELS - 1))
-            );
-            CRGB c = wheel[h];
-            c.nscale8(brightness8);
-            scaledWheel[h][b] = c;
-        }
+    // Build 256-step HSV wheel (0-255)
+    for (uint16_t i = 0; i < COLOR_RANGE; ++i) {
+        wheel[i] = CHSV(i, 255, 255);
     }
 
     LedStrip::buildIndexMap();
@@ -57,50 +37,25 @@ void LedStrip::buildIndexMap() const {
     }
 };
 
-void LedStrip::update(float accelScale, bool isSleeping) {
+void LedStrip::update(uint8_t scale8, bool isSleeping) {
     sleeping = isSleeping;
     if (sleeping) {
         breathe();
         return;
     }
-    CRGB c = colorForScale(accelScale);
+    CRGB c = colorForScale(scale8);
     crawl(c);
 }
 
-/* -------------------------------------------------- */
-uint32_t LedStrip::colorWheel(uint16_t color, float brightness) {
-    color = constrain(color, 0, COLOR_RANGE - 1);     // 0-383
-    uint8_t r = 0, g = 0, b = 0;
-
-    switch (color / 128) {             // 0–127, 128–255, 256–383
-        case 0:
-            r = 127 - color % 128;
-            g = color % 128;
-            break; // red→yellow
-        case 1:
-            g = 127 - color % 128;
-            b = color % 128;
-            break; // yellow→teal
-        case 2:
-            r = color % 128;
-            b = 127 - color % 128;
-            break; // teal→purple
-    }
-    r *= brightness;
-    g *= brightness;
-    b *= brightness;
-    return (r << 16) | (g << 8) | b;
-}
-
-CRGB LedStrip::colorForScale(float scale) const {
-    scale = constrain(scale, 0.0f, 1.0f);
-    // Hue index
-    uint16_t h = static_cast<uint16_t>(scale * (COLOR_RANGE - 1));
-    // Brightness index using integer math
-    uint8_t bIdx = static_cast<uint8_t>(
-            (scale * (BRIGHTNESS_LEVELS - 1)) + 0.5f
-    );
-    return scaledWheel[h][bIdx];
+/* ------------ colorForScale ------------------ */
+CRGB LedStrip::colorForScale(uint8_t scale8) {
+    // Hue 0-255 maps directly
+    CRGB c = wheel[scale8];
+    // Brightness scaling 0-255 → MIN..MAX (uint8 math)
+    uint8_t b8 = cfg::MIN_BRIGHTNESS +
+                 (uint16_t(scale8) * (cfg::MAX_BRIGHTNESS - cfg::MIN_BRIGHTNESS)) / 255;
+    c.nscale8_video(b8);
+    return c;
 }
 
 /* ------------ crawl animation ------------------ */
@@ -162,7 +117,7 @@ void LedStrip::breathe() {
     lastBreath = now;
 
     uint8_t key = KEYFRAMES[keyframePtr];
-    uint8_t v = (cfg::SLEEP_BRIGHTNESS * 127 * key) / 256;
+    uint8_t v = (uint16_t(cfg::SLEEP_BRIGHTNESS) * key) / 255;
     fill_solid(ledsArr, cfg::LED_COUNT, CRGB(v, 0, 0));
     FastLED.show();
 
@@ -170,8 +125,8 @@ void LedStrip::breathe() {
 }
 
 /* ------------ misc ----------------------------- */
-void LedStrip::showSolid(float scale) {
-    CRGB c = colorForScale(scale);
+void LedStrip::showSolid(uint8_t scale8) {
+    CRGB c = colorForScale(scale8);
     if (c == lastColor) return;
     lastColor = c;
 

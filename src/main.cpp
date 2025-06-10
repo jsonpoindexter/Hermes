@@ -21,10 +21,10 @@ AccelSensor accelSensor;
 #define DEBUG 1
 
 void setup() {
-#ifdef DEBUG
-    Serial.begin(9600);
-    delay(5000);
-#endif
+//#ifdef CONFIG_DEBUG
+//    Serial.begin(9600);
+//    delay(5000);
+//#endif
 
     cfg::begin();
 
@@ -91,7 +91,7 @@ void setup() {
 
 // Throttle accelerometer polling to 50 Hz
 static uint32_t lastPollTime = 0;
-static float lastScale = 0.0f;
+static uint8_t lastScale = 0;
 static bool lastSleeping = false;
 
 void loop() {
@@ -100,7 +100,7 @@ void loop() {
     uint32_t now = millis();
     if (now - lastPollTime >= 10) {           // 10 ms => 100 Hz poll rate
         accelSensor.poll();
-        lastScale = accelSensor.currentAccelScale();
+        lastScale = accelSensor.currentScale8();
         lastSleeping = accelSensor.isSleeping();
         lastPollTime = now;
     }
