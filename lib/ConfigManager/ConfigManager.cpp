@@ -10,6 +10,12 @@ ConfigManager::ConfigManager() {
     _uintParams["crawlSpeedMs"] = cfg::getCrawlSpeedMs();
     _boolParams["reverseStrip"] = cfg::getReverseStrip();
     _uintParams["hermesSensitivity"] = cfg::getHermesSensitivity();
+    _uintParams["baseHue"] = cfg::getBaseHue();
+    _uintParams["emaAlpha"] = cfg::getEmaAlpha();
+    _uintParams["accelDeadband"] = cfg::getAccelDeadband();
+    _uintParams["maxBrightness"] = cfg::DEFAULT_MAX_BRIGHTNESS;
+    _uintParams["minBrightness"] = cfg::DEFAULT_MIN_BRIGHTNESS;
+    _uintParams["sleepBrightness"] = cfg::DEFAULT_SLEEP_BRIGHTNESS;
 }
 
 uint16_t ConfigManager::getUint(const std::string &key) const {

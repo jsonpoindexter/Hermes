@@ -43,6 +43,9 @@ private:
     uint16_t crawlSpeedMs = cfg::DEFAULT_CRAWL_SPEED_MS;
     // runtime-controlled reverse strip
     bool reverseStrip = cfg::DEFAULT_REVERSE_STRIP;
+    uint8_t maxBrightness = cfg::DEFAULT_MAX_BRIGHTNESS;
+    uint8_t minBrightness = cfg::DEFAULT_MIN_BRIGHTNESS;
+    uint8_t sleepBrightness = cfg::DEFAULT_SLEEP_BRIGHTNESS;
 
 
     static CRGB wheel[COLOR_RANGE];

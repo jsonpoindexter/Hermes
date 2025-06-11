@@ -52,8 +52,8 @@ CRGB LedStrip::colorForScale(uint8_t scale8) {
     // Hue 0-255 maps directly, shifted by base hue
     CRGB color = wheel[(scale8 + cfg::getBaseHue()) & 0xFF];
     // Brightness scaling 0-255 → MIN..MAX (uint8 math)
-    uint8_t b8 = cfg::MIN_BRIGHTNESS +
-                 scale8 * (cfg::MAX_BRIGHTNESS - cfg::MIN_BRIGHTNESS) / 255;
+    uint8_t b8 = cfg::getMinBrightness() +
+                 scale8 * (cfg::getMaxBrightness() - cfg::getMinBrightness()) / 255;
     color.nscale8_video(b8);
     return color;
 }
@@ -121,7 +121,7 @@ void LedStrip::breathe() {
     lastBreath = now;
 
     uint8_t key = KEYFRAMES[keyframePtr];
-    uint8_t v = (uint16_t(cfg::SLEEP_BRIGHTNESS) * key) / 255;   // 0‑255 brightness
+    uint8_t v = (uint16_t(cfg::getSleepBrightness()) * key) / 255;   // 0‑255 brightness
     CRGB c = CHSV(cfg::getBaseHue(), 255, v);
     fill_solid(ledsArr, cfg::LED_COUNT, c);
     FastLED.show();

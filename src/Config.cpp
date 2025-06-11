@@ -17,34 +17,43 @@ namespace cfg {
     uint8_t baseHue = DEFAULT_BASE_HUE;
     uint8_t emaAlpha = DEFAULT_EMA_ALPHA;
     uint8_t accelDeadband = DEFAULT_ACCEL_DEADBAND;
+    uint8_t maxBrightness = DEFAULT_MAX_BRIGHTNESS;
+    uint8_t minBrightness = DEFAULT_MIN_BRIGHTNESS;
+    uint8_t sleepBrightness = DEFAULT_SLEEP_BRIGHTNESS;
 
     void begin() {
         // reserve enough EEPROM for crawlSpeedMs (2), reverseStrip (1), hermesSensitivity (2), baseHue (1), emaAlpha (1), accelDeadband (1)
         EEPROM.begin(sizeof(crawlSpeedMs) + sizeof(reverseStrip) + sizeof(hermesSensitivity)
-                     + sizeof(baseHue) + sizeof(emaAlpha) + sizeof(accelDeadband));
+                     + sizeof(baseHue) + sizeof(emaAlpha) + sizeof(accelDeadband)
+                     + sizeof(maxBrightness) + sizeof(minBrightness) + sizeof(sleepBrightness));
+
         // read back; if never written it will be 0xFFFF
         uint16_t storedCrawlSpeed;
         EEPROM.get(0, storedCrawlSpeed);
         if (storedCrawlSpeed != 0xFFFF) {
             crawlSpeedMs = storedCrawlSpeed;
         }
+
         // read reverseStrip at offset after crawlSpeedMs
         uint8_t storedReverse;
         EEPROM.get(sizeof(crawlSpeedMs), storedReverse);
         if (storedReverse != 0xFF) {
             reverseStrip = storedReverse != 0;
         }
+
         // read hermesSensitivity at offset after reverseStrip
         uint16_t storedSensitivity;
         EEPROM.get(sizeof(crawlSpeedMs) + sizeof(reverseStrip), storedSensitivity);
         if (storedSensitivity != 0xFFFF) {
             hermesSensitivity = storedSensitivity;
         }
+
         uint8_t storedHue;
         EEPROM.get(sizeof(crawlSpeedMs) + sizeof(reverseStrip) + sizeof(hermesSensitivity), storedHue);
         if (storedHue != 0xFF) {
             baseHue = storedHue;
         }
+
         uint8_t storedAlpha;
         EEPROM.get(sizeof(crawlSpeedMs) + sizeof(reverseStrip) + sizeof(hermesSensitivity) + sizeof(baseHue),
                    storedAlpha);
@@ -55,6 +64,31 @@ namespace cfg {
                    + sizeof(baseHue) + sizeof(emaAlpha),
                    storedDb);
         if (storedDb != 0xFF) accelDeadband = storedDb;
+
+        uint8_t storedMaxBrightness;
+        EEPROM.get(sizeof(crawlSpeedMs) + sizeof(reverseStrip) + sizeof(hermesSensitivity)
+                   + sizeof(baseHue) + sizeof(emaAlpha) + sizeof(accelDeadband),
+                   storedMaxBrightness);
+        if (storedMaxBrightness != 0xFF) {
+            maxBrightness = storedMaxBrightness;
+        }
+
+        uint8_t storedMinBrightness;
+        EEPROM.get(sizeof(crawlSpeedMs) + sizeof(reverseStrip) + sizeof(hermesSensitivity)
+                   + sizeof(baseHue) + sizeof(emaAlpha) + sizeof(accelDeadband) + sizeof(maxBrightness),
+                   storedMinBrightness);
+        if (storedMinBrightness != 0xFF) {
+            minBrightness = storedMinBrightness;
+        }
+
+        uint8_t storedSleepBrightness;
+        EEPROM.get(sizeof(crawlSpeedMs) + sizeof(reverseStrip) + sizeof(hermesSensitivity)
+                   + sizeof(baseHue) + sizeof(emaAlpha) + sizeof(accelDeadband) + sizeof(maxBrightness)
+                   + sizeof(minBrightness),
+                   storedSleepBrightness);
+        if (storedSleepBrightness != 0xFF) {
+            sleepBrightness = storedSleepBrightness;
+        }
     }
 
     void registerParameters(std::vector<std::unique_ptr<IConfigParameter>> &list) {
@@ -145,6 +179,43 @@ namespace cfg {
                     ConfigManager::instance().notifyChangeUint("accelDeadband", accelDeadband);
                 }
         )));
+        list.push_back(std::unique_ptr<IConfigParameter>(new ConfigParameter<uint8_t>(
+                "00400008-B5A3-F393-E0A9-E50E24DCCA9E",
+                "maxBrightness",
+                []() { return maxBrightness; },
+                [](uint8_t v) {
+                    maxBrightness = v;
+                    EEPROM.put(sizeof(crawlSpeedMs) + sizeof(reverseStrip) + sizeof(hermesSensitivity)
+                               + sizeof(baseHue) + sizeof(emaAlpha) + sizeof(accelDeadband), v);
+                    EEPROM.commit();
+                    ConfigManager::instance().notifyChangeUint("maxBrightness", maxBrightness);
+                }
+        )));
+        list.push_back(std::unique_ptr<IConfigParameter>(new ConfigParameter<uint8_t>(
+                "00400009-B5A3-F393-E0A9-E50E24DCCA9E",
+                "minBrightness",
+                []() { return minBrightness; },
+                [](uint8_t v) {
+                    minBrightness = v;
+                    EEPROM.put(sizeof(crawlSpeedMs) + sizeof(reverseStrip) + sizeof(hermesSensitivity)
+                               + sizeof(baseHue) + sizeof(emaAlpha) + sizeof(accelDeadband) + sizeof(maxBrightness), v);
+                    EEPROM.commit();
+                    ConfigManager::instance().notifyChangeUint("minBrightness", minBrightness);
+                }
+        )));
+        list.push_back(std::unique_ptr<IConfigParameter>(new ConfigParameter<uint8_t>(
+                "0040000A-B5A3-F393-E0A9-E50E24DCCA9E",
+                "sleepBrightness",
+                []() { return sleepBrightness; },
+                [](uint8_t v) {
+                    sleepBrightness = v;
+                    EEPROM.put(sizeof(crawlSpeedMs) + sizeof(reverseStrip) + sizeof(hermesSensitivity)
+                               + sizeof(baseHue) + sizeof(emaAlpha) + sizeof(accelDeadband) + sizeof(maxBrightness)
+                               + sizeof(minBrightness), v);
+                    EEPROM.commit();
+                    ConfigManager::instance().notifyChangeUint("sleepBrightness", sleepBrightness);
+                }
+        )));
     }
 
 
@@ -160,4 +231,10 @@ namespace cfg {
     uint8_t getEmaAlpha() { return emaAlpha; }
 
     uint8_t getAccelDeadband() { return accelDeadband; }
+
+    uint8_t getMaxBrightness() { return maxBrightness; }
+
+    uint8_t getMinBrightness() { return minBrightness; }
+
+    uint8_t getSleepBrightness() { return sleepBrightness; }
 }

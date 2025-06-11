@@ -29,9 +29,9 @@ namespace cfg {
     constexpr uint8_t SLEEP_SENSITIVITY = 25;
 
 // --------- Brightness ------------
-    constexpr uint8_t MAX_BRIGHTNESS = 255;
-    constexpr uint8_t MIN_BRIGHTNESS = 255;
-    constexpr uint8_t SLEEP_BRIGHTNESS = 64;
+    constexpr uint8_t DEFAULT_MAX_BRIGHTNESS = 255;
+    constexpr uint8_t DEFAULT_MIN_BRIGHTNESS = 255;
+    constexpr uint8_t DEFAULT_SLEEP_BRIGHTNESS = 64;
 
 // --------- Color -----------------
     constexpr uint8_t DEFAULT_BASE_HUE = 0;     // 0‑255 hue offset for the wheel
@@ -60,6 +60,12 @@ namespace cfg {
     uint8_t getEmaAlpha();
 
     uint8_t getAccelDeadband();
+
+    uint8_t getMaxBrightness();
+
+    uint8_t getMinBrightness();
+
+    uint8_t getSleepBrightness();
 
     // register config parameters
     void registerParameters(std::vector<std::unique_ptr<IConfigParameter>> &list);
