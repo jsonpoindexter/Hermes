@@ -109,6 +109,10 @@ namespace {
 }
 
 void LedStrip::breathe() {
+    if (showingCalibrationPattern) {
+        // Don't breathe while showing calibration pattern
+        return;
+    }
     constexpr int frames = sizeof(KEYFRAMES);
     float period = static_cast<float>(cfg::SLEEP_CYCLE_MS) / frames;
     unsigned long now = millis();
