@@ -6,7 +6,8 @@
 AccelSensor::AccelSensor()
         : lsm(), bufferPosition(0),
           calibrationLEDTime(0), calibrationLEDOn(false),
-          lastSignificantMovementTime(0), calibration(0.0) {}
+          lastSignificantMovementTime(0), calibration(0.0),
+          smoothMag(0), prevMag(0), bypassDeadband(false) {}
 
 bool AccelSensor::begin() {
     DEBUG_PRINTLN("BEGIN");
@@ -17,6 +18,8 @@ bool AccelSensor::begin() {
         accelBuffer[i] = {0, 0, 0};
     }
     calibrate();
+    smoothMag = static_cast<uint16_t>(calibration);
+    prevMag = smoothMag;
     return true;
 }
 
@@ -30,6 +33,7 @@ void AccelSensor::calibrate() {
     calibration = 0;
     calibrationLEDTime = 0;
     calibrationLEDOn = false;
+    bypassDeadband = true;
     while (true) {
         DEBUG_PRINT("...");
         if (!fillBuffer()) {
@@ -46,6 +50,7 @@ void AccelSensor::calibrate() {
         if (pass) break;
         calibration = sum / bufferSize();
     }
+    bypassDeadband = false;
     DEBUG_PRINT("Calibration complete: ");
     DEBUG_PRINTLN(calibration);
 }
@@ -85,6 +90,16 @@ bool AccelSensor::fillBuffer() {
         lastSignificantMovementTime = millis();
     }
 
+    // --- single‑pole EMA on magnitude ---
+    uint16_t rawMag = static_cast<uint16_t>(getMagnitude(newR));
+    smoothMag += ((rawMag - smoothMag) * cfg::getEmaAlpha()) >> 8;
+
+    if (!bypassDeadband &&
+        abs(int(smoothMag) - int(prevMag)) < cfg::getAccelDeadband()) {
+        prevMag = smoothMag;
+        return false;
+    }
+    prevMag = smoothMag;
     return true;
 }
 
@@ -110,7 +125,7 @@ const AccelReading &AccelSensor::getPreviousReading() const {
 }
 
 double AccelSensor::currentAccelScale() const {
-    double delta = abs(getMagnitude(getCurrentReading()) - calibration);
+    double delta = abs(int(smoothMag) - calibration);
     return delta / hermesSensitivity;
 }
 
@@ -119,7 +134,7 @@ bool AccelSensor::isSleeping() const {
 }
 
 uint8_t AccelSensor::currentScale8() const {
-    double delta = fabs(getMagnitude(getCurrentReading()) - calibration);
-    uint32_t scaled = static_cast<uint32_t>((delta * 255.0) / hermesSensitivity);
+    uint32_t delta = abs(int(smoothMag) - calibration);
+    uint32_t scaled = (delta * 255) / hermesSensitivity;
     return scaled > 255 ? 255 : static_cast<uint8_t>(scaled);
 }

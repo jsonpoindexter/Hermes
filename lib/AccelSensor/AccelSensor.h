@@ -47,4 +47,7 @@ private:
 
     uint16_t hermesSensitivity = cfg::DEFAULT_HERMES_SENSITIVITY;
 
+    int smoothMag;
+    int prevMag;
+    bool bypassDeadband;
 };

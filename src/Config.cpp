@@ -15,10 +15,13 @@ namespace cfg {
     bool reverseStrip = DEFAULT_REVERSE_STRIP;
     uint16_t hermesSensitivity = DEFAULT_HERMES_SENSITIVITY;
     uint8_t baseHue = DEFAULT_BASE_HUE;
+    uint8_t emaAlpha = DEFAULT_EMA_ALPHA;
+    uint8_t accelDeadband = DEFAULT_ACCEL_DEADBAND;
 
     void begin() {
-        // reserve enough EEPROM for crawlSpeedMs (2), reverseStrip (1), hermesSensitivity (2), baseHue (1)
-        EEPROM.begin(sizeof(crawlSpeedMs) + sizeof(reverseStrip) + sizeof(hermesSensitivity) + sizeof(baseHue));
+        // reserve enough EEPROM for crawlSpeedMs (2), reverseStrip (1), hermesSensitivity (2), baseHue (1), emaAlpha (1), accelDeadband (1)
+        EEPROM.begin(sizeof(crawlSpeedMs) + sizeof(reverseStrip) + sizeof(hermesSensitivity)
+                     + sizeof(baseHue) + sizeof(emaAlpha) + sizeof(accelDeadband));
         // read back; if never written it will be 0xFFFF
         uint16_t storedCrawlSpeed;
         EEPROM.get(0, storedCrawlSpeed);
@@ -42,6 +45,16 @@ namespace cfg {
         if (storedHue != 0xFF) {
             baseHue = storedHue;
         }
+        uint8_t storedAlpha;
+        EEPROM.get(sizeof(crawlSpeedMs) + sizeof(reverseStrip) + sizeof(hermesSensitivity) + sizeof(baseHue),
+                   storedAlpha);
+        if (storedAlpha != 0xFF) emaAlpha = storedAlpha;
+
+        uint8_t storedDb;
+        EEPROM.get(sizeof(crawlSpeedMs) + sizeof(reverseStrip) + sizeof(hermesSensitivity)
+                   + sizeof(baseHue) + sizeof(emaAlpha),
+                   storedDb);
+        if (storedDb != 0xFF) accelDeadband = storedDb;
     }
 
     void registerParameters(std::vector<std::unique_ptr<IConfigParameter>> &list) {
@@ -108,6 +121,30 @@ namespace cfg {
                     ConfigManager::instance().notifyChangeUint("baseHue", baseHue);
                 }
         )));
+        list.push_back(std::unique_ptr<IConfigParameter>(new ConfigParameter<uint8_t>(
+                "00400006-B5A3-F393-E0A9-E50E24DCCA9E",
+                "emaAlpha",
+                []() { return emaAlpha; },
+                [](uint8_t v) {
+                    emaAlpha = v;
+                    EEPROM.put(sizeof(crawlSpeedMs) + sizeof(reverseStrip) + sizeof(hermesSensitivity)
+                               + sizeof(baseHue), v);
+                    EEPROM.commit();
+                    ConfigManager::instance().notifyChangeUint("emaAlpha", emaAlpha);
+                }
+        )));
+        list.push_back(std::unique_ptr<IConfigParameter>(new ConfigParameter<uint8_t>(
+                "00400007-B5A3-F393-E0A9-E50E24DCCA9E",
+                "accelDeadband",
+                []() { return accelDeadband; },
+                [](uint8_t v) {
+                    accelDeadband = v;
+                    EEPROM.put(sizeof(crawlSpeedMs) + sizeof(reverseStrip) + sizeof(hermesSensitivity)
+                               + sizeof(baseHue) + sizeof(emaAlpha), v);
+                    EEPROM.commit();
+                    ConfigManager::instance().notifyChangeUint("accelDeadband", accelDeadband);
+                }
+        )));
     }
 
 
@@ -119,4 +156,8 @@ namespace cfg {
     uint16_t getHermesSensitivity() { return hermesSensitivity; }
 
     uint8_t getBaseHue() { return baseHue; }
+
+    uint8_t getEmaAlpha() { return emaAlpha; }
+
+    uint8_t getAccelDeadband() { return accelDeadband; }
 }

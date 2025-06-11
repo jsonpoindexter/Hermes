@@ -36,6 +36,10 @@ namespace cfg {
 // --------- Color -----------------
     constexpr uint8_t DEFAULT_BASE_HUE = 0;     // 0‑255 hue offset for the wheel
 
+// --------- Filter ----------------
+    constexpr uint8_t DEFAULT_EMA_ALPHA = 32; // 12 % new‑sample weight
+    constexpr uint8_t DEFAULT_ACCEL_DEADBAND = 4;  // 4 LSB ≈ 0.004 g dead‑band
+
 // --------- Debug -----------------
     constexpr bool WAIT_FOR_KEYBOARD = false;
     constexpr bool PRINT_LOOP_TIME = false;
@@ -52,6 +56,10 @@ namespace cfg {
     uint16_t getHermesSensitivity();
 
     uint8_t getBaseHue();
+
+    uint8_t getEmaAlpha();
+
+    uint8_t getAccelDeadband();
 
     // register config parameters
     void registerParameters(std::vector<std::unique_ptr<IConfigParameter>> &list);
